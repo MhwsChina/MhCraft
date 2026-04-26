@@ -41,7 +41,7 @@ def getjava(java):
     global jd,dl
     try:return jd[java['majorVersion']]
     except:
-        dl.dls+=getjavaf(java['component'],rp=geetrp())
+        dl.dls+=getjavaf(java['component'],rp=getrp())
         dl.start(getth())
         dl.join()
         jd=findjava('mhc')

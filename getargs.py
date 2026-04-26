@@ -42,7 +42,9 @@ def getargjvm(v,d,ver=None):
     for jvm in v['arguments']['jvm']:
         try:
             jv,rules=jvm['value'],jvm['rules']
-            if prules(rules):args.append(fmargjvm(jv,ver,d,cs))
+            if prules(rules):
+                if type(jv)==list:args+=jv
+                else:args.append(jv)
         except:
             args.append(fmargjvm(jvm,ver,d,cs))
     return args
