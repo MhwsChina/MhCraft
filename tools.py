@@ -7,7 +7,7 @@ def urljson(url,timeout=100):
     while 1:
         try:return req.get(url,verify=False,timeout=timeout).json()
         except:pass
-def dlurl(u,p,chunk_size=1048576):
+def dlurl(u,p,chunk_size=1048576,open=open):
     mkdir(os.path.split(p)[0])
     while 1:
         try:

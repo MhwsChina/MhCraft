@@ -185,7 +185,7 @@ commands={
     'exit':(sys.exit,sys.exit),
     'e':'exit'
 }
-print('MhCraft b1.0  _MhwsChina_制作');print('正在加载配置...')
+print('MhCraft b1.0_2  _MhwsChina_制作');print('正在加载配置...')
 getmem();getth();getrpl();getst();getbq();updatejs(getjs())
 if not os.path.exists(pj(getd(),'launcher_profiles.json')):
     with open(pj(getd(),'launcher_profiles.json'),'w') as f:

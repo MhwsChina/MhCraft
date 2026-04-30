@@ -3,6 +3,27 @@ from tools import *
 from log import *
 from time import sleep
 d='.minecraft'
+wrt=[]
+class mopen:
+    def __init__(self,p,a='wb'):
+        self.data={'p':p,'a':a,'d':b''}
+    def __enter__(self):
+        return self
+    def __exit__(self,*a):
+        self.close()
+    def write(self,t):
+        while 1:
+            try:
+                try:self.data['d']+=t
+                except:self.data['d']=t
+                break
+            except:pass
+    def close(self):
+        global wrt
+        while 1:
+            try:wrt.append(self.data);break
+            except:pass
+        del self.data
 class xcdl:
     def __init__(self):
         self.threads=[]
@@ -16,7 +37,7 @@ class xcdl:
                 sha1.update(c)
                 c=f.read(chunk_size)
         return sha1.hexdigest()
-    def dl_th(self,chsha1=0):
+    def dl_th(self,chsha1=0,huancun=1):
         while self.dls:
             dct=self.dls.pop(0)
             try:u,p,s=dct
@@ -26,8 +47,8 @@ class xcdl:
                 if not s or not chsha1:continue
                 if self.chksha1(p) in s:continue      
             print('下载',u)
-            dlurl(u,p)
-    def start(self,thread,chsha1=1):
+            dlurl(u,p,open=(mopen if huancun else open))
+    def start(self,thread,chsha1=1,huancun=1):
         l=len(self.threads)
         if thread<=l:return
         else:thread-=l
@@ -35,7 +56,14 @@ class xcdl:
             t=th.Thread(target=self.dl_th,args=(chsha1,),name='dl_th')
             t.start()
             self.threads.append(t)
+        th.Thread(target=self.write).start()
         if l==0:self.join()
+    def write(self):
+        while wrt or self.threads:
+            try:d=wrt.pop(0)
+            except:sleep(0.1);continue
+            with open(d['p'],d['a']) as f:
+                f.write(d['d'])
     def join(self):
         for i in self.threads:
             i.join()
