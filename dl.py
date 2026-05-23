@@ -46,18 +46,18 @@ class xcdl:
             if os.path.exists(p):
                 if not s or not chsha1:continue
                 if self.chksha1(p) in s:continue      
-            print('下载',u)
-            dlurl(u,p,open=(mopen if huancun else open))
+            #print('下载',u)
+            dlurl(u,p,openf=(mopen if huancun else open))
     def start(self,thread,chsha1=1,huancun=1):
         l=len(self.threads)
-        if thread<=l:return
-        else:thread-=l
+        if thread>l:thread=thread-l
+        else:thread=0
         for i in range(thread):
-            t=th.Thread(target=self.dl_th,args=(chsha1,),name='dl_th')
+            t=th.Thread(target=self.dl_th,args=(chsha1,huancun),name='dl_th')
             t.start()
             self.threads.append(t)
-        th.Thread(target=self.write).start()
-        if l==0:self.join()
+        if l==0 and huancun:self.wt=th.Thread(target=self.write);self.wt.start()
+        #self.join()
     def write(self):
         while wrt or self.threads:
             try:d=wrt.pop(0)
@@ -67,10 +67,12 @@ class xcdl:
     def join(self):
         for i in self.threads:
             i.join()
+        try:self.wt.join(I)
+        except:pass
         self.threads.clear()
 def rpliburl(url,rp):
     return url.replace('libraries.minecraft.net',rp)\
-        .replace('files.minecraftforge.net/maven',rp)\
+        .replace('files.minecraftforge.net',rp)\
         .replace('maven.fabricmc.net',rp)
 def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/maven
     fs=[]
@@ -118,6 +120,7 @@ def dlver(vd,ver,d=d,rpl='',rpa='',v=None):
     try:
         if not v:v=readv(ver,d)
     except:
+        if v:raise
         rs=req.get(findv(vd,0,ver),timeout=100)
         mkdir(d,'versions',ver)
         writec(pj(d,'versions',ver,ver+'.json'),rs.content)
@@ -128,7 +131,7 @@ def dlver(vd,ver,d=d,rpl='',rpa='',v=None):
         try:a=fmass(v,d)
         except:
             rs=req.get(v['assetIndex']['url'],timeout=100)
-            mkdir(d,'assets/indexes',ver)
+            mkdir(d,'assets/indexes')
             writec(pj(d,'assets/indexes',v['assetIndex']['id']+'.json'),rs.content)
             a=rs.json()
         fs+=getass(a,d,rpa)

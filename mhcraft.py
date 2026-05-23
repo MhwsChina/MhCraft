@@ -1,218 +1,588 @@
+import tkinter as tk
+import tkinter.ttk as ttk
+import tkinter.messagebox as mess
+from tkinter import filedialog
+import psutil
 from getargs import *
 from dl import *
 from java import *
 from files import *
 from ml import *
-if os.path.exists('mhl'):
-    try:shutil.remove('mhl')
-    except:pass
-mkdir('mhc')
-dl=xcdl()
-getd=lambda:getjs(('d','.minecraft'))
-def getname():
-    if not getjs('name'):return getjs(('name',input('请输入游戏名:').replace(' ','')))
-    else:return getjs('name')
-getuuid=lambda:getjs(('uuid',caluuid(getname())))
-gettoken=lambda:getjs(('token',getuuid()))
-getst=lambda:{
-    'name':getname(),
-    'uuid':getuuid(),
-    'token':gettoken()
-}
-getmem=lambda:['java','-Xmx'+getjs(('mem','2g')),'-Xms'+getjs(('mem','2g'))]
-getth=lambda:int(getjs(('thread',256)))
-getu=lambda:'bmclapi2.bangbang93.com'
-getisu=lambda:int(getjs(('isu',1)))
-getrpl=lambda:((getu()+'/maven',getu()+'/assets') if getisu() else ('',''))
-getrp=lambda:getu() if getisu() else ''
-getbq=lambda:int(getjs(('deepbq',0)))
-mkdir(getd(),'versions')
-def getln(txt,typ=str,n=None,ls=[],err='输入不正确,请重新输入!'):
-    while True:
-        tmp=input(txt)
-        if not tmp and n!=None:
-            return n
-        if not tmp in ls and ls!=[]:
-            print(err)
-            continue
-        try:return typ(tmp)
-        except:print(err)
-def getjava(java):
-    global jd,dl
-    try:return jd[java['majorVersion']]
-    except:
-        dl.dls+=getjavaf(java['component'],rp=getrp())
-        dl.start(getth())
-        dl.join()
-        jd=findjava('mhc')
-        return jd[java['majorVersion']]
-def movemc(v1,v2):
-    print('转移版本',v1,'->',v2)
-    p=pj(getd(),'versions')
-    mkdir(pj(p,v2))
-    shutil.copytree(pj(p,v1),pj(p,v2),dirs_exist_ok=True)
-    removemc(v1)
-    try:os.remove(pj(p,v2,v1+'.json'))
-    except:pass
-    try:os.remove(pj(p,v2,v1+'.jar'))
-    except:pass
-def fabric(ver):
-    oldv,tag=ver,0
-    try:ver,nv=fvanilla(vd,readv(ver,getd())['id']);nv=findver(nv)        
-    except:pass
-    lt=fabric_latestloader()
-    try:
-        print(ver,nv)
-        input()
-        if nv==findver(lt):print('已是最新版!');return
-        else:print('发现更新',lt);tag=1;
-    except:pass
-    print('正在安装fabric',ver)
-    v=instfabric(ver,lt)
-    if tag:
-        print('正在转移文件到新版本')
-        movemc(oldv,v)
-    print(v,'安装完成')
-def forge(ver):
-    oldv,tag=ver,0
-    try:ver,nv=fvanilla(vd,readv(ver,getd())['id']);nv=findver(nv)        
-    except:pass
-    print('正在安装forge',ver)
-    url,fgv=forge_inst_url(ver)
-    try:
-        if nv==fmmln(vd,fgv):print('已是最新版!');return
-        else:print('发现更新',fgv);tag=1
-    except:pass
-    if getisu():url=url.replace('files.minecraftforge.net',getu())
-    instp=pj('mhc/forge','forge'+fgv+'.jar')
-    if not os.path.exists(instp):print('下载',url);dlurl(url,instp)
-    lzp,dc,v=instforge_part1(instp,getd())
-    #if not lzp:print('已经安装过该版本的forge且是最新版!');return
-    if 'libraries' in dc:bqwj(v,v=dc)
-    bqwj(v)
-    java=getjava({'component':'java-runtime-gamma','majorVersion':17})
-    instforge_part2(lzp,dc,v,instp,java,getd())
-    if tag:
-        print('正在转移文件到新版本')
-        movemc(oldv,v)
-    print(v,'安装完成')
-def runmc(ver):
-    print('正在补全文件')
-    bqwj(ver,getbq())
-    args,jv=getarg(ver,getd(),getst(),getmem())
-    java=getjava(jv)
-    args[0]=java
-    sub.run(args)
-    print(ver,'已关闭')
-def dlmc(ver):
-    dl.dls+=dlver(vd,ver,getd(),*getrpl())
-    dl.start(getth())
-    print(ver,'下载完毕')
-def bqwj(ver,chsha1=1,v=None):
-    dl.dls+=dlver(vd,ver,getd(),*getrpl(),v=v)
-    dl.start(getth(),chsha1)
-    print(ver,'补全完毕')
-def scv():
-    vers=os.listdir(pj(getd(),'versions'))
-    j=1
-    for i in vers:
-        print(j,i);j+=1
-    return vers[getln('请选择版本序号:',int,'')-1]
-def lsav():
-    print('\n1.下载最新版\n2.手动选择版本')
-    if getln('请选择序号:',int,['1','2'])==1:
-        print('\n1.正式版\n2.快照版')
-        return vd['latest'][{'1':'release','2':'snapshot'}[getln('请选择序号',str,['1','2'])]]
-    else:
-        print('\n1.正式版\n2.快照版\n3.远古版')
-        t={'1':'release','2':'snapshot','3':'old'}[getln('请选择序号',str,['1','2','3'])]
-        print('所有版本:',' / '.join([i['id'] for i in findv(vd,t)[::-1]]))
-        return input('请输入要下载的版本:')
-def setst(a,b):
-    if not a:return
-    print('set',a,'to',b)
-    setjs((a,b))
-    updatejs(getjs())
-def listst():
-    t={'name':'游戏名','mem':'游戏运行内存','d':'mc文件夹','thread':'下载线程数','isu':'是否使用国内源下载加速(1表示是,0表示否)',
-       'deepbq':'补全文件是否检查文件sha1(1表示是,0表示否)'
-    }
-    fm={'mem':lambda x:fmbt(int(x)),'thread':int,'isu':lambda x:int(int(x) and 1),'deepbq':lambda x:int(int(x) and 1)}
-    ls,ls1=getjs(),[]
-    j=1
-    for n in getjs():
-        try:print(j,t[n],'(',n,')');ls1.append(n);j+=1
-        except:continue
-    sst=ls1[getln('请选择要设置的序号:',lambda a:abs(int(a)),'')-1]
-    z=getln(f'请输入设置成什么?(留空为{getjs(sst)})',(fm[sst] if sst in fm else str),'')
-    if z=='':return None,None
-    return sst,z
-def removemc(ver):
-    d=getd()
-    libs=listlib(d)
-    for i in libs:
-        if libs[i]==[ver]:
-            path=pj(d,i)
-            try:os.remove(path);print('删除',path)
-            except Exception as ex:print('删除失败:',ex)
-    libs,ass=None,listass(d)
-    for i in ass:
-        if ass[i]==[ver]:
-            path=pj(d,'assets/objects',i[0:2],i)
-            try:os.remove(path);print('删除',path)
-            except Exception as ex:print('删除失败:',ex)
-    shutil.rmtree(pj(d,'versions',ver))
-    print(ver,'删除完毕')
-psnone=lambda *a:None
-hlp=lambda *a:print('帮助:\n你可以在该窗口输入指令\n启动游戏:r,下载游戏:d,设置:s,删除版本:rm,帮助:h,深度补全文件:b,安装/更新/更改mod加载器为fabric:f,安装/更新/更改mod加载器为forge:fg,退出:e\n警告:更新fabric或forge请选择安装过fabric或forge的版本,否则会重新安装',mode='WARN')
-commands={
-    'r':(runmc,scv),#指令:(函数,没有参数调用的函数)
-    'd':(dlmc,lsav),
-    's':(setst,listst),
-    'h':(hlp,psnone),
-    'rm':(removemc,scv),
-    'b':(bqwj,scv),
-    'f':(fabric,scv),
-    'fg':(forge,scv),
-    'fabric':'f',
-    'forge':'fg',
-    'run':'r',
-    'dl':'d',
-    'download':'d',
-    'set':'s',
-    'help':'h',
-    'bq':'b',
-    'exit':(sys.exit,sys.exit),
-    'e':'exit'
-}
-print('MhCraft b1.0_2  _MhwsChina_制作');print('正在加载配置...')
-getmem();getth();getrpl();getst();getbq();updatejs(getjs())
-if not os.path.exists(pj(getd(),'launcher_profiles.json')):
-    with open(pj(getd(),'launcher_profiles.json'),'w') as f:
-        f.write('{"clientToken":"","profiles":{},"selectedProfile":""}')
-if getjs('isu'):vdurl='https://'+getu()+'/mc/game/version_manifest.json'
-else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
-vd,jd=urljson(vdurl),findjava('mhc')
-hlp();print('你的游戏名:',getname())
-def parcmd():
-    global arg
-    if not arg[0] in commands:
-        return os.system(' '.join(arg))
-    cmd=commands[arg[0]]
-    if type(cmd)==str:
-        arg[0]=cmd
-        return parcmd()
-    arg1=arg[1:]
-    if not arg1:
-        arg1=cmd[1]()
-        if type(arg1)!=tuple:arg1=(arg1,)
-    cmd[0](*arg1)
-_txt='>'
-while 1:
-    try:
-        arg=input(_txt).split()
-        _txt=_txt or '>'
-        if not arg:continue
-    except:_txt='';continue
-    try:parcmd()
-    except Exception as s:pass;print(s,mode='ERROR')
+from modrinth import *
+fg,ffg='black','#cce4f7'
+def lb(b,**kw):return tk.Label(b,**kw,fg=fg)
+def lsx(b,**kw):return tk.Listbox(b,**kw,fg=fg)
+def tx(b,**kw):return tk.Text(b,**kw,fg=fg)
+def bt(b,**kw):return tk.Button(b,**kw,activebackground=ffg,relief='groove',fg=fg)
+def entry(b,**kw):return tk.Entry(b,**kw,fg=fg)
+def combox(b,**kw):return ttk.Combobox(b,**kw,foreground=fg,background=fg)
+def spinx(b,**kw):return ttk.Spinbox(b,**kw,foreground=fg)
+def radiobt(b,**kw):return tk.Radiobutton(b,**kw,fg=fg,relief='flat')
+def checkbt(b,**kw):return tk.Checkbutton(b,**kw,fg=fg,relief='flat')
+def frm(a,**k):return tk.Frame(a,**k)
+def lbfrm(a,**k):return tk.LabelFrame(a,fg=fg,**k)
+def scale(a,orient='horizontal',**k):return tk.Scale(a,**k,fg=fg,relief='flat',orient=orient)
+class var(tk.Variable):
+    def __init__(self,name,value,typ=str):
+        self.type=typ
+        value=getjs((name,value));self._default=value
+        tk.Variable.__init__(self,value=value,name=name)
+        self.trace_add('write',self.settojs)
+    def settojs(self,*args):
+        setjs((self._name,self.type(self._tk.globalgetvar(self._name))))
+    def set(self,value):
+        setjs((self._name,self.type(value)))
+        super().set(value)
+    def get(self):
+        return self.type(getjs(self._name))
+    def reset(self):
+        self.set(self._default)
+class ui:
+    def __init__(self):
+        self.ver='b1.0_3'
+        self.srs,self.step=[],0
+        self.createW()
+    def show(self):
+        w.mainloop()
+    def createW(self):
+        global w
+        w=tk.Tk();w.resizable(0,0)
+        w.title(f'MhCraft {self.ver}')
+        ttk.Style().configure('m.TNotebook.Tab',foreground=fg);ttk.Style().configure('m.TNotebook', tabposition='sw')
+        ttk.Style().configure('m1.TNotebook.Tab',foreground=fg);ttk.Style().configure('m1.TNotebook', tabposition='nw')
+        self.nt=ttk.Notebook(w,style='m.TNotebook')
+        self.rn=tk.Frame();self.nt.add(self.rn,text='启动')
+        self.dl=tk.Frame();self.nt.add(self.dl,text='下载')
+        self.us=tk.Frame();self.nt.add(self.us,text='用户')
+        self.st=ttk.Notebook(style='m1.TNotebook');self.nt.add(self.st,text='设置')
+        self.ab=tk.Frame();self.nt.add(self.ab,text='关于')
+        self.nt.grid(padx=10,pady=7)
+        ###启动页面
+        r1=lbfrm(self.rn,text='所有版本')
+        self._vls=tk.Scrollbar(r1,orient='vertical');self._vls.pack(side='right',fill='y')
+        self.vl=lsx(r1,width=40,height=11,yscrollcommand=self._vls.set);self.vl.pack(side='left')
+        self._vls.config(command=self.vl.yview)
+        self.vl.bind('<<ListboxSelect>>',self.setinfo)
+        r1.grid(row=0,column=0,rowspan=2)
+        r2=lbfrm(self.rn,text='操作')
+        bt(r2,text='启动',width=5,command=self.runmc).grid(row=0,column=0)
+        bt(r2,text='删除',width=5,command=self.rmmc).grid(row=0,column=1)
+        bt(r2,text='补全缺损文件',width=12,command=self.bqmc).grid(row=0,column=2)
+        bt(r2,text='导出启动脚本',width=12,command=self.outmc).grid(row=1,columnspan=2)
+        bt(r2,text='修改版本名',width=12,command=self.rnmc).grid(row=1,column=2)
+        bt(r2,text='复制版本',width=12,command=self.copymc).grid(row=2,columnspan=2)
+        bt(r2,text='存档操作',width=12,command=self.csaves).grid(row=2,column=2)
+        #bt(r2,text='刷新版本列表').grid(row=3,column=0,columnspan=3)
+        r2.grid(row=0,column=1,sticky='nw')
+        r3=lbfrm(self.rn,text='资源')
+        bt(r3,text='模组文件夹',width=12,command=lambda:self.openvfd('mods')).grid(row=0)
+        bt(r3,text='光影文件夹',width=12,command=lambda:self.openvfd('shaderpacks')).grid(row=0,column=1)
+        bt(r3,text='资源包文件夹',width=12,command=lambda:self.openvfd('resourcepacks')).grid(row=1)
+        bt(r3,text='截图文件夹',width=12,command=lambda:self.openvfd('screenshots')).grid(row=1,column=1)
+        bt(r3,text='存档文件夹',width=12,command=lambda: self.openvfd('saves')).grid(row=2)
+        bt(r3,text='版本文件夹',width=12,command=lambda: self.openvfd('')).grid(row=2,column=1)
+        #bt(r3,text='导出整合包',width=12).grid(row=6)
+        r3.grid(row=1,column=1,sticky='nw')
+        r4=lbfrm(self.rn,text='版本信息')
+        self.v1=tk.StringVar();self.v1.set('版本号:无')#self.v1.set(mc版本号信息)
+        lb(r4,textvariable=self.v1,width=26).grid(row=1)
+        self.ml=tk.StringVar();self.ml.set('模组加载器:无')#self.ml.set(mc模组加载器名称)
+        lb(r4,textvariable=self.ml,width=26).grid(row=2)#self.mlv.set(mc模组加载器版本)
+        self.mlv=tk.StringVar();self.mlv.set('加载器版本:无')
+        lb(r4,textvariable=self.mlv,width=26).grid(row=3)
+        r4.grid(row=1,column=2,sticky='nw')
+        r5=lbfrm(self.rn,text='模组加载器')
+        self.scm=tk.StringVar();self.scm.set('fabric')
+        radiobt(r5,text='fabric',variable=self.scm,value='fabric',width=20).grid(row=0,columnspan=2)
+        radiobt(r5,text='forge',variable=self.scm,value='forge',width=20).grid(row=1,columnspan=2)
+        bt(r5,text='安装/更新',width=12,command=self.instml).grid(row=2)
+        bt(r5,text='删除加载器',width=12,command=self.noadd).grid(row=2,column=1)
+        r5.grid(row=0,column=2,sticky='nw')
+        ###下载界面
+        self.d1=lbfrm(self.dl,text='下载列表')#d1.config(text='asdfasdf') 更改"下载列表"标题
+        self._dls=tk.Scrollbar(self.d1,orient='vertical');self._dls.pack(side='right',fill='y')
+        self.dll=lsx(self.d1,width=40,height=11,yscrollcommand=self._dls.set);self.dll.pack(side='left')
+        self._dls.config(command=self.dll.yview)#self.dll:listbox 下载列表
+        self.d1.grid(row=0,column=0,rowspan=2)
+        d2=lbfrm(self.dl,text='mc')
+        self.dlt=tk.StringVar();self.dlt.set('release')#self.dlt.get() 下载的mc版本种类
+        radiobt(d2,text='正式版',variable=self.dlt,value='release',command=self.redl).grid(row=1)
+        radiobt(d2,text='测试版',variable=self.dlt,value='snapshot',command=self.redl).grid(row=1,column=1)
+        radiobt(d2,text='远古版',variable=self.dlt,value='old',command=self.redl,width=12).grid(row=1,column=2)
+        bt(d2,text='刷新列表',width=12,command=self.redl).grid(row=2)
+        bt(d2,text='下载',width=12,command=lambda:th.Thread(target=self.dlmc).start()).grid(row=2,column=1)
+        d2.grid(row=0,column=1,sticky='nw')
+        d3=lbfrm(self.dl,text='搜索')
+        lb(d3,text='搜索内容:').grid(row=0)
+        self.src=entry(d3,width=26);self.src.grid(row=0,column=1,columnspan=2)
+        lb(d3,text='搜索条件:').grid(row=1)#self.src.get() 搜索内容
+        self.srt=tk.StringVar();self.srt.set('模组')#self.srt.get() 搜索条件
+        combox(d3,values=['模组','资源包','数据包','光影'],textvariable=self.srt,width=23).grid(row=1,column=1,columnspan=2,sticky='w')
+        lb(d3,text='页码').grid(row=2)
+        self.srp=tk.IntVar();self.srp.set(1)#self.srp.get() 搜索页码
+        spinx(d3,textvariable=self.srp,from_=1,to=10000,width=24).grid(row=2,column=1,columnspan=2,sticky='w')
+        bt(d3,text='刷新列表',width=12,command=self.resr).grid(row=3)
+        bt(d3,text='搜索',width=12,command=self.srch).grid(row=3,column=1)
+        self.srbt=bt(d3,text='选择',width=12,command=self.dlmod);self.srbt.grid(row=3,column=2)
+        d3.grid(row=1,column=1,sticky='w')
+        ###用户界面
+        u1=lbfrm(self.us,text='用户列表')
+        self._uss=tk.Scrollbar(u1,orient='vertical');self._uss.pack(side='right',fill='y')
+        self.usl=lsx(u1,width=40,height=11,yscrollcommand=self._uss.set);self.usl.pack(side='left')
+        self._uss.config(command=self.usl.yview)
+        u1.grid(row=0,column=0,rowspan=2)
+        u0=lbfrm(self.us,text='操作')
+        u2=lbfrm(u0,text='离线用户')
+        lb(u2,text='用户名',width=5).grid(row=0)
+        self.adus=tk.StringVar();entry(u2,width=20,textvariable=self.adus).grid(row=0,column=1)
+        u2.grid(row=0,columnspan=2)
+        u3=lbfrm(u0,text='第三方用户')
+        lb(u3,text='服务器',width=5).grid(row=0)
+        self.adsv=tk.StringVar();entry(u3,width=20,textvariable=self.adsv).grid(row=0,column=1)
+        self.adsv.set('https://littleskin.cn/api/yggdrasil')
+        lb(u3,text='邮箱',width=5).grid(row=1)
+        self.adem=tk.StringVar();entry(u3,width=20,textvariable=self.adem).grid(row=1,column=1)
+        lb(u3,text='密码',width=5).grid(row=2)
+        self.adps=tk.StringVar();entry(u3,width=20,textvariable=self.adps).grid(row=2,column=1)
+        u3.grid(row=1,columnspan=2)
+        bt(u0,text='登录并添加',width=10,command=self.adduser).grid(row=2)
+        bt(u0,text='使用(从左侧选择)',width=15,command=self.useuser).grid(row=2,column=1)
+        bt(u0,text='微软登录',width=10,command=self.noadd).grid(row=3,sticky='w')
+        bt(u0,text='删除(从左侧选择)',width=15,command=self.rmuser).grid(row=3,column=1,sticky='w')
+        u0.grid(row=0,column=1)
+        u4=lbfrm(self.us,text='信息')
+        lb(u4,text='当前使用:').grid(row=0)
+        self.usn=tk.StringVar();self.usn.set('无')
+        lb(u4,textvariable=self.usn,width=11).grid(row=0,column=1)
+        lb(u4,text='用户类型:').grid(row=1)
+        self.ustp=tk.StringVar();self.ustp.set('未知')
+        lb(u4,textvariable=self.ustp,width=11).grid(row=1,column=1)
+        u4.grid(row=0,column=2,sticky='nw')
+        ###设置界面
+        #设置-游戏界面
+        self.sg=tk.Frame();self.st.add(self.sg,text='游戏')
+        lb(self.sg,text='运行内存(GB)').grid(row=0)
+        #self.mem.get() 游戏运行内存(等于剩余内存GB整除3)
+        self.mem,mem=tk.IntVar(),psutil.virtual_memory();self.mem.set(mem.free//3221225472)
+        scale(self.sg,from_=1,to=mem.total//1073741824,width=10,length=400,variable=self.mem).grid(row=0,column=1,columnspan=20)
+        #self.isgl=tk.IntVar()
+        #checkbt(self.sg,variable=self.isgl,text='默认启用版本隔离').grid(row=0,column=2)
+        self.deepbq=var('deepbq',0,int)
+        lb(self.sg,text='补全文件').grid(row=1)
+        radiobt(self.sg,variable=self.deepbq,text='快速',value=0).grid(row=1,column=1)
+        radiobt(self.sg,variable=self.deepbq,text='深度(硬盘不好会卡好久)',value=1).grid(row=1,column=2,columnspan=4)
+        lb(self.sg,text='游戏目录').grid(row=2)
+        bt(self.sg,text='选择',command=self.choose_d).grid(row=2,column=1)
+        bt(self.sg,text='重置',command=self.resetd).grid(row=2,column=2)
+        self.d=var('d','.minecraft')
+        lb(self.sg,textvariable=self.d,width=50,anchor='w').grid(row=2,column=3,columnspan=10,sticky='w')
+        #设置-启动器界面
+        self.sl=tk.Frame();self.st.add(self.sl,text='启动器')
+        lb(self.sl,text='下载源').grid(row=0)
+        self.isu=var('isu',0,int)#self.isu.get() 下载源
+        radiobt(self.sl,variable=self.isu,value=0,text='官方').grid(row=0,column=1)
+        radiobt(self.sl,variable=self.isu,value=1,text='国内').grid(row=0,column=2)
+        lb(self.sl,text='下载线程数').grid(row=1)
+        self.thd=var('thread',128,int)#self.thd.get() 下载线程数
+        scale(self.sl,from_=8,to=256,width=10,length=400,resolution=8,variable=self.thd).grid(row=1,column=1,columnspan=10)
+        sg1=lbfrm(self.sl,text='java列表')
+        self._js=tk.Scrollbar(sg1,orient='vertical');self._js.pack(fill='y',side='right')
+        self.jvls=lsx(sg1,height=5,width=60,yscrollcommand=self._js.set);self.jvls.pack(side='left')
+        self._js.config(command=self.jvls.yview)
+        sg1.grid(row=2,columnspan=5)#self.jvls:listbox java列表
+        #关于界面
+        lb(self.ab,text='作者:_MhwsChina_').grid()
+        lb(self.ab,text='项目:https://github.com/MhwsChina/MhCraft').grid()
+        lb(self.ab,text=f'版本:{self.ver}').grid()
+        lb(self.ab,text='开源协议:GPL-3.0').grid()
+        bt(self.ab,text='检查更新',command=self.noadd).grid()
+        ###end
+    def resr(self):
+        if not self.srs:self.srs,self.srtp=tuple(fmsearch(nlimit='mod',url=self.getmu())),'mod';
+        self.resr1()
+        self.d1.config(text='下载列表')
+        self.dll.delete(0,'end')
+        for i in self.srs:
+            self.dll.insert('end',i[1])
+    def srch(self):
+        self.srtp={'模组':'mod','资源包':'resourcepack','数据包':'datapack','光影':'shader'}[self.srt.get()]
+        self.srs=tuple(fmsearch(self.src.get(),page=int(self.srp.get()),nlimit=self.srtp,url=self.getmu()))
+        self.resr1();self.resr()
+    def resr1(self):
+        self.d1.config(text='下载列表')
+        self.step=0
+        self.srbt.config(text='选择')
+    def getmu(self):return 'mod.mcimirror.top/modrinth' if self.isu.get() else 'api.modrinth.com'
+    def getmu1(self):return 'mod.mcimirror.top' if self.isu.get() else 'cdn.modrinth.com'
+    def dlmod(self):
+        if self.step==0:
+            print(self.srs[self.getscdl()][0:2])
+            self.srid,title,self.srml,self.srmcl,icon=self.srs[self.getscdl()]
+            self.srmcl=self.srmcl[::-1]
+            self.step=1
+            if not self.srtp in 'resourcepackdatapack':
+                self.d1.config(text='模组加载器')
+                self.dll.delete(0,'end')
+                for i in self.srml:
+                    self.dll.insert('end',i)
+                return
+        if self.step==1:
+            if not self.srtp in 'resourcepackdatapack':self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
+            else:self.srm=None
+            print(self.srm)
+            self.step=2
+            self.d1.config(text='mc版本')
+            self.dll.delete(0,'end')
+            for i in self.srmcl:
+                self.dll.insert('end',i)
+            return
+        if self.step==2:
+            self.srmc=self.srmcl[self.getscdl('请在左侧选择mc版本!')]
+            print(self.srmc)
+            self.srprj=tuple(getprjv2(self.srid,self.srmc,self.srm,url=self.getmu()))[::-1]
+            self.d1.config(text='资源版本')
+            self.dll.delete(0,'end')
+            self.srbt.config(text='下载')
+            for i in self.srprj:
+                self.dll.insert('end',i[1])
+            self.step=3;return
+        if self.step==3:
+            srfl=self.srprj[self.getscdl('请在左侧选择资源版本!')][0][0]
+            print(srfl)
+            mkdir(self.d.get(),'versions')
+            sv=filedialog.asksaveasfilename(initialdir=pj(self.d.get(),'versions'),initialfile=srfl['filename'])
+            if not sv:return
+            url=srfl['url'].replace('cdn.modrinth.com',self.getmu1())
+            print(url,sv);self.dlfile(url,sv,join=0)
+            self.resr1();self.resr()
+    def instml(self):
+        ver=self.getscver()
+        if self.scm.get()=='fabric':
+            if 'forge' in self.ml.get():mess.showerror('错误','无法安装fabric!该版本已经安装了forge!');return
+            self.instfab(ver)
+        if self.scm.get()=='forge':
+            if 'fabric' in self.ml.get() or 'neo' in self.ml.get():mess.showerror('错误','无法安装forge!该版本已经安装了fabric或neoforge!');return
+            self.instfg(ver)
+    def instfab(self,ver):
+        vd,tag=readv(ver,self.d.get()),0
+        if 'inheritsFrom' in vd:ov,ver,fbv=ver,vd['inheritsFrom'],findver(fmlver(vd)['fabric'])
+        lt=fabric_latestloader()
+        try:
+            if fbv>=findver(lt):mess.showwarning('警告','已经是最新版了!');return
+            else:print(fbv,'<',lt);tag=1
+        except:pass
+        try:v=instfabric(ver,lt)
+        except Exception as s:mess.showerror('错误',str(s));return
+        if tag:movemc(ov,v);self.rmmc1(ov)
+        self.remcl();mess.showinfo('提示',v+'安装完成')
+    def instfg(self,ver):
+        mess.showinfo('提示','安装即将开始,程序可能会未响应,请勿关闭,这属于正常现象!')
+        vd,tag=readv(ver,self.d.get()),0
+        if 'inheritsFrom' in vd:ov,ver,fgv=ver,vd['inheritsFrom'],findver(fmlver(vd)['forge'])
+        url,lt=forge_inst_url(ver)
+        try:
+            if fgv>=findver(fvanilla(self.vd,lt)[0]):mess.showwarning('警告','已经是最新版了!');return
+            else:print(fgv,'<',lt);tag=1
+        except:pass
+        if self.isu.get():url=url.replace('files.minecraftforge.net',self.u)
+        instp=pj('mhc/temp/forge','forge'+lt+'.jar')
+        if not os.path.exists(instp):self.dlfile(url,instp)
+        try:lzp,dc,v=instforge_part1(instp,self.d.get())
+        except Exception as s:mess.showerror('错误',str(s));return
+        if 'libraries' in dc:self.bqwj(v,chsha1=1,v=dc,join=0)
+        self.bqwj(v,chsha1=1,join=1)
+        java=self.getjava({'component':'java-runtime-gamma','majorVersion':17})
+        mess.showinfo('提示','安装即将开始第二步,程序可能会未响应并弹出黑色窗口,请勿关闭!否则将会安装失败,游戏将无法启动!整个过程需要1至两分钟!')
+        instforge_part2(lzp,dc,v,instp,java,self.d.get())
+        if tag:movemc(ov,v);self.rmmc1(ov)
+        self.remcl();mess.showinfo('提示',v+'安装完成')
+    def rnmc(self):
+        ver=self.getscver()
+        if not 'inheritsFrom' in readv(ver,self.d.get()):mess.showwarning('警告','该版本为原版,无法直接重命名!\n提示:复制该版本后,重命名复制的版本可达到一样的效果');return
+        nver=self.input_box(ver)
+        p=pj(self.d.get(),'versions',ver)
+        os.rename(pj(p,ver+'.json'),pj(p,nver+'.json'))
+        try:os.rename(pj(p,ver+'.jar'),pj(p,nver+'.jar'))
+        except:pass
+        os.rename(p,pj(d,'versions',nver))
+        self.remcl()
+    def copymc(self):
+        ver=self.getscver()
+        vd,p=readv(ver,self.d.get()),pj(self.d.get(),'versions')
+        if '_copy' in ver:ver=ver.split('_copy')[0]
+        txt,i=ver+'_copy',1;tag=os.path.exists(pj(p,txt))
+        while tag:
+            path=pj(p,txt+str(i))
+            if not os.path.exists(path):txt+=str(i);break
+            i+=1
+        mkdir(p,txt)
+        with open(pj(p,txt,txt+'.json'),'w') as f:
+            if 'inheritsFrom' in vd:f.write(dumps(vd))
+            else:f.write(f'{{"id":"{ver}","inheritsFrom":"{ver}","libraries":[]}}')
+        self.remcl();mess.showinfo('提示',f'{txt}已生成!')
+    def rmmc(self):
+        ver=self.getscver()
+        if not mess.askokcancel('警告','真的要删除吗?该版本的存档、截图等资源将全部丢失!'):return
+        if not mess.askokcancel('警告','再次确认,真的要删除吗?'):return
+        self.rmmc1(ver)
+    def rmmc1(self,ver):
+        d=self.d.get()
+        for i in listlib(d).items():
+            if i[1]==[ver]:
+                path=pj(d,'libraries',i[0])
+                try:os.remove(path);print('delete',path)
+                except Exception as ex:print(ex)
+        for i in listass(d).items():
+            if i[1]==[ver]:
+                path=pj(d,'assets/objects',i[0][0:2],i[0])
+                try:os.remove(path);print('delete',path)
+                except Exception as ex:print(ex)
+        shutil.rmtree(pj(d,'versions',ver))
+        rmemptdir('.minecraft')
+        self.remcl()
+    def dlmc(self):
+        ver=self.dll.get(self.getscdl())
+        #mess.showinfo('提示','按下"确认"开始下载'+ver+',程序会在后台下载')
+        self.dl.dls+=dlver(self.vd,ver,self.d.get(),*self.getrpl())
+        self.startdl(1)
+        self.remcl()
+        mess.showinfo('提示',ver+'下载完毕')
+    def runmc(self):
+        ver,st=self.getscver(),getjs('scus')
+        if not st:mess.showwarning('警告','未检测到使用中的用户!\n若没有添加,请在"用户"选项卡内添加并使用\n若已添加,请在"用户"选项卡内选择你要使用的用户并使用');return
+        self.bqwj(ver,self.deepbq.get())
+        args,jv=getarg(ver,st,self.d.get(),self.getmem(),1)
+        args[0]=self.getjava(jv)
+        th.Thread(target=mess.showinfo,args=('提示','启动完成,请等待游戏窗口出现!')).start()
+        mkdir('mhc/temp');th.Thread(target=sbrun,args=(args,),kwargs={'cwd':'mhc/temp'}).start()
+    def outmc(self):
+        ver,st=self.getscver(),getjs('scus')
+        if not st:mess.showwarning('警告','未检测到使用中的用户!\n若没有添加,请在"用户"选项卡内添加并使用\n若已添加,请在"用户"选项卡内选择你要使用的用户并使用');return
+        args,jv=getarg(ver,st,self.d.get(),self.getmem(),0)
+        args[0]='"'+self.getjava(jv)+'"'
+        path='run'+ver+'.bat' if os.name=='nt' else '.sh'
+        with open(path,'w') as f:
+            for i in args:
+                if ' ' in i:i='"'+i+'"'
+                try:tag;f.write(' ')
+                except:tag=1
+                f.write(i)
+        mess.showinfo('提示',f'启动脚本"{path}"已在当前目录生成,移动该脚本会无法使用,所以请勿移动')
+    def bqmc(self):
+        self.bqwj(self.getscver(),1,join=1)
+    def csaves(self):
+        ver=self.getscver()
+        p=pj(self.d.get(),'versions',ver,'saves')
+        if not os.path.exists(p):mess.showerror('错误','存档文件夹不存在!');return
+        ls=os.listdir(p)
+        if not ls:mess.showwarning('警告','存档文件夹为空,无法操作!');return
+        save=self.choose_list(*ls,text='请选择存档')
+        ch=self.choose_list('删除','重命名','转移到其他版本',text='选择操作')
+        if ch=='删除':
+            if not mess.askokcancel('警告','真的要删除吗?该存档将永久消失!'):return
+            if not mess.askokcancel('警告','再次确认,真的要删除吗?'):return
+            shutil.rmtree(pj(p,save))
+            mess.showinfo('提示',save+'已删除!')
+        if ch=='重命名':
+            n=self.input_box(save)
+            os.rename(pj(p,save),pj(p,n))
+            mess.showinfo('提示',save+'已重命名为'+n)
+        if ch=='转移到其他版本':
+            v=self.choose_list(*mclist(self.d.get()),text='请选择版本')
+            shutil.move(pj(p,save),pj(self.d.get(),'versions',v,'saves',save))
+            mess.showinfo('提示',save+'已移动至'+v)
+    def getjava(self,java):
+        try:return self.jls[java['majorVersion']]
+        except:
+            self.dl.dls+=getjavaf(java['component'],rp=self.getrp())
+            self.startdl(1)
+            self.loadjava()
+            return self.jls[java['majorVersion']]
+    def bqwj(self,ver,chsha1=1,v=None,join=1):
+        self.dl.dls+=dlver(self.vd,ver,self.d.get(),*self.getrpl(),v)
+        self.startdl(join,title='补全文件')
+    def getrpl(self):return (self.u+'/maven',self.u+'/assets') if self.isu.get() else ('','')
+    def getrp(self):return self.u if self.isu.get() else ''
+    def getmem(self):return ['java',f'-Xmx{self.mem.get()}g',f'-Xms{self.mem.get()}g']
+    def choose_d(self):
+        path1=os.path.abspath(self.d.get())
+        path=filedialog.askdirectory(initialdir=path1)
+        if path and pj(path)!=pj(path1):
+            self.d.set(path)
+            self.remcl()
+    def resetd(self):
+        self.d.set('.minecraft')
+        self.remcl()
+    def noadd(self):
+        mess.showinfo('抱歉','当前功能还无法使用,后续会添加!')
+    def choose_list(self,*a,text='请选择'):
+        w1,res,row=tk.Toplevel(w),tk.StringVar(),1
+        ds=lambda x:w1.destroy()
+        lb(w1,text=text).grid(row=0)
+        for i in a:
+            if not res.get():res.set(i)
+            radiobt(w1,text=i,variable=res,value=i).grid(row=row,columnspan=2)
+            row+=1
+        bt(w1,text='确定',command=w1.destroy).grid(row=row)
+        bt(w1,text='取消',command=lambda:ds(res.set(''))).grid(row=row,column=1)
+        w.wait_window(w1)
+        if not res.get():raise RuntimeError('用户取消了操作或输入为空')
+        return res.get()
+    def input_box(self,normal=''):
+        w1=tk.Toplevel(w)
+        ds=lambda x:w1.destroy()
+        res=tk.StringVar();res.set(normal)
+        entry(w1,textvariable=res).grid(row=0,columnspan=2)
+        bt(w1,text='取消',command=lambda:ds(res.set(''))).grid(row=1)
+        bt(w1,text='确定',command=w1.destroy).grid(row=1,column=1)
+        w.wait_window(w1)
+        if not res.get():raise RuntimeError('用户取消了操作或输入为空')
+        return res.get()
+    def crtprog(self,title='文件下载'):
+        a=tk.Toplevel(w);a.title(title);a.resizable(0,0)
+        a.protocol("WM_DELETE_WINDOW",lambda:1)
+        lb(a,text='剩余').grid(row=0)
+        b=tk.StringVar()
+        lb(a,textvariable=b).grid(row=0,column=1)
+        prg=ttk.Progressbar(a,length=340,mode='indeterminate')
+        prg.grid(row=1,columnspan=2);prg.start(100)
+        th.Thread(target=self.updprog,args=(a,b)).start()
+        w.wait_window(a)
+    def updprog(self,a,b):
+        while self.dl.threads:
+            b.set(len(self.dl.dls)+len(wrt))
+            sleep(0.1)
+        a.destroy()
+    def startdl(self,join=0,title='文件下载'):
+        t=self.dl.threads==[]
+        self.dl.start(self.thd.get())
+        if t:
+            #self.crtprog()#if join:self.dl.join()#else:th.Thread(target=self.dl.join).start()
+            th.Thread(target=self.dl.join).start()
+            if join:self.crtprog(title)
+            else:th.Thread(target=self.crtprog,args=(title,)).start()
+        else:
+            if join:self.dl.join()
+    def loadjava(self):
+        self.jls=findjava('mhc')
+        self.jvls.delete(0,'end')
+        for i in self.jls.values():
+            self.jvls.insert('end',i)
+    def load(self):
+        self.dl,self.u,self.vd=xcdl(),'bmclapi2.bangbang93.com',{}
+        self.loaduser_to_ui()
+        if getjs('mem'):setjs('mem')
+        if not os.path.exists(self.d.get()):
+            self.d.set('.minecraft')
+            mess.showwarning('警告','游戏目录不存在!已自动重置!')
+        self.remcl()
+        self.loadjava()
+        if self.isu.get():vdurl='https://'+self.u+'/mc/game/version_manifest.json'
+        else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
+        self.vd=urljson(vdurl);self.redl()
+    def redl(self):
+        self.resr1()
+        self.dll.delete(0,'end')
+        for i in findv(self.vd,self.dlt.get()):
+            self.dll.insert('end',i['id'])
+    def set_from_ui(self):
+        setjs(('thread',self.thd.get()),('isu',self.isu.get()))
+    def loaduser_to_ui(self):
+        users,name,user=alluser(),getjs('name'),getjs(('scus',{}))
+        if user:
+            self.usn.set([user['name']])
+            self.ustp.set({'msa':'微软','mojang':'第三方','legacy':'离线'}[(user['type'] if 'type' in user else 'legacy').lower()])
+        if name:
+            self.addluser(data={'name':name,'uuid':getjs('uuid'),'token':getjs('token')})
+            setjs('name','uuid','token')
+        self.usl.delete(0,'end')
+        for i in users:
+            self.usl.insert('end',i['name'])
+    def useuser(self):
+        if not alluser():mess.showerror('错误','你没添加用户!');return
+        sc=self.usl.curselection()
+        if not sc:mess.showerror('错误','请在左侧选择一个用户!');return
+        setjs(('scus',alluser()[sc[0]]))
+        self.loaduser_to_ui()
+    def addluser(self,usn=None,data=None):
+        if not data:
+            uuid=caluuid(usn)
+            data={'name':usn,'uuid':uuid,'token':uuid}
+        if data in alluser():return 1
+        adduser(data)
+    def adduser(self):
+        global js
+        usn,sv,em,ps=self.adus.get(),self.adsv.get(),self.adem.get(),self.adps.get()
+        if usn:
+            if not usn:mess.showwarning('警告','用户名长度不能小于1且不能为空!');return
+            for i in usn.lower():
+                if not i in 'qwertyuiopasdfghjklzxcvbnm_1234567890':
+                    mess.showerror('输入不正确','用户名除了英文、数字、英文下划线"_"之外都不能包含!');return
+            self.adus.set('')
+            if self.addluser(usn):mess.showerror('错误','该用户已存在!');return
+            self.loaduser_to_ui()
+        elif sv and em and ps:
+            mess.showinfo('抱歉','添加第三方用户还无法使用,后续会添加!你可以先使用离线用户!')
+            #self.adem.set('');self.adps.set('')
+        else:mess.showerror('错误','请填写完整的用户信息!')
+    def rmuser(self):
+        if not alluser():mess.showerror('错误','你没添加用户!');return
+        sc=self.usl.curselection()
+        if not sc:mess.showerror('错误','请在左侧选择一个用户!');return
+        if not mess.askyesno('再次确认','真的要删除该用户吗?'):return
+        rmuser(sc[0])
+        self.loaduser_to_ui()
+    def remcl(self):
+        self.vl.delete(0,'end')
+        for i in mclist(self.d.get()):
+            self.vl.insert('end',i)
+    def getscver(self,rs=1):
+        sc=self.vl.curselection()
+        if rs and not sc:mess.showerror('错误','请在左侧选择mc版本!');raise RuntimeError('未选择mc版本!')
+        return self.vl.get(sc[0])
+    def getscdl(self,text='请在左侧选择下载内容!'):
+        sc=self.dll.curselection()
+        if not sc:mess.showerror('错误',text);raise RuntimeError(text)
+        return sc[0]
+    def openvfd(self,name):
+        try:openfd(pj(self.d.get(),'versions',self.getscver(),name))
+        except FileNotFoundError:mess.showerror('错误','该文件夹不存在!')
+    def setinfo(self,*a):
+        try:vd=readv(self.getscver(0),self.d.get())
+        except:return
+        self.v1.set('版本号:'+vd['id']);ml=fmlver(vd)
+        if ml:
+            for i in ml:self.ml.set('模组加载器:'+i),self.mlv.set('加载器版本:'+ml[i])
+        else:self.ml.set('模组加载器:无');self.mlv.set('加载器版本:无')
+    def dlfile(self,url,path,title='文件下载',join=1):
+        a=tk.Toplevel(w);a.title(title);a.resizable(0,0)
+        a.protocol("WM_DELETE_WINDOW",lambda:1)
+        t,z=tk.IntVar(),tk.IntVar()
+        lb(a,textvariable=t).grid(row=0)
+        lb(a,text='/').grid(row=0,column=1)
+        lb(a,textvariable=z).grid(row=0,column=2)
+        prg=ttk.Progressbar(a,length=340,mode='determinate')
+        prg.grid(row=1,columnspan=3)#prg.start(100)
+        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg)).start()
+        if join:w.wait_window(a)
+    def dlfilep(self,u,p,a,t,z,prg,chunk_size=32768,timeout=100):
+        mkdir(os.path.split(p)[0])
+        while 1:
+            try:
+                rs=req.get(u,timeout=timeout,verify=False,headers=hd,stream=True)
+                if rs.status_code!=200:print(f'{u},resp code!=200')
+                size=int(rs.headers.get('Content-Length',0));z.set(size)
+                if size:prg['maximum']=size
+                else:prg['mode']='indeterminate';prg.start(100)
+                with open(p,'wb') as f:
+                    for c in rs.iter_content(chunk_size=chunk_size):
+                        f.write(c)
+                        tt=f.tell();t.set(tt)
+                        if size:prg['value']=tt
+                break
+            except Exception as ex:print(ex)
+        a.destroy();mess.showinfo('提示','下载完成!')
+mui=ui()
+th.Thread(target=mui.load,name='loading').start()
+w.mainloop()
+os._exit(0)

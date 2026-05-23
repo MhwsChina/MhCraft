@@ -16,20 +16,26 @@ def getjavaf(name,p='mhc',rp=''):
         if rp:raw['url']=raw['url'].replace('piston-meta.mojang.com',rp)
         fs.append((raw['url'],pj(p,name,i),raw['sha1']))
     return fs
-def getmajorv(path):
+def getmajorv(path):#获取java版本方法一:从release文件读取
     with open(path) as f:t=f.read()
     ver=int(re.findall('JAVA_VERSION="\\d+',t)[0].replace('JAVA_VERSION="',''))
     if ver==1:return 8
     else:return ver
+def getjavav(path):#获取java版本方法二:从java.exe的输出截取
+    ver=sbrun([path,'-version'],text=1,capture_output=1,).stderr.split()[2].replace('"','').split('.')
+    if ver[0]=='1':return int(ver[1])
+    else:return int(ver[0])
 def findjava(path):
     finds={}
     if getosname()=='windows':find='java.exe'
     else:find='java'
     for r,d,f in os.walk(path):
-        p=pj(r,'bin',find)
+        p,tag=pj(r,'bin',find),0
         if not os.path.exists(p):continue
         for i in f:
-            if i=='release':finds[getmajorv(pj(r,i))]=p
+            if i=='release':ver,tag=getmajorv(pj(r,i)),1
+        if not tag:ver=getjavav(p)
+        finds[ver]=p
     return finds
             
         

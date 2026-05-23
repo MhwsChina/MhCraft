@@ -5,10 +5,11 @@ def listlib(d=d):
     fls,osn,arch={},getosname(),str(findver(platform.architecture()[0]))
     for ver in os.listdir(pj(d,'versions')):
         for lib in readv(ver,d)['libraries']:
-            if 'rules' in lib and not prules(lib['rules']):continue
+            #if 'rules' in lib and not prules(lib['rules']):continue
             if 'downloads' in lib:
                 if 'classifiers' in lib['downloads']:
                     nt=lib['natives'][osn].replace('${arch}',arch)
+                    if not nt in lib['downloads']['classifiers']:continue
                     fl=pj(lib['downloads']['classifiers'][nt]['path'])
                     try:fls[fl].append(ver)
                     except:fls[fl]=[ver]
@@ -43,11 +44,12 @@ def rmemptdir(d):
     tag=1
     for i in os.listdir(d):
         p=pj(d,i)
-        if os.path.isfile(p):tag=0;break
+        if os.path.isfile(p):tag=0
         else:
-            if not rmemptdir(p):tag=0;break
+            try:
+                if not rmemptdir(p):tag=0
+            except Exception as s:print(s)
     if tag:
         print('del',d)
-        input()
         shutil.rmtree(d)
     return tag
