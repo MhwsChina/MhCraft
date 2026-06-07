@@ -9,6 +9,7 @@ from java import *
 from files import *
 from ml import *
 from modrinth import *
+from update import getupdate
 fg,ffg='black','#cce4f7'
 def lb(b,**kw):return tk.Label(b,**kw,fg=fg)
 def lsx(b,**kw):return tk.Listbox(b,**kw,fg=fg)
@@ -39,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_3'
+        self.ver='b1.0_4'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
@@ -163,8 +164,8 @@ class ui:
         self.sg=tk.Frame();self.st.add(self.sg,text='游戏')
         lb(self.sg,text='运行内存(GB)').grid(row=0)
         #self.mem.get() 游戏运行内存(等于剩余内存GB整除3)
-        self.mem,mem=tk.IntVar(),psutil.virtual_memory();self.mem.set(mem.free//3221225472)
-        scale(self.sg,from_=1,to=mem.total//1073741824,width=10,length=400,variable=self.mem).grid(row=0,column=1,columnspan=20)
+        mem=psutil.virtual_memory().total//1073741824;self.mem=var('mem',mem//6,int)
+        scale(self.sg,from_=1,to=mem,width=10,length=400,variable=self.mem).grid(row=0,column=1,columnspan=20)
         #self.isgl=tk.IntVar()
         #checkbt(self.sg,variable=self.isgl,text='默认启用版本隔离').grid(row=0,column=2)
         self.deepbq=var('deepbq',0,int)
@@ -182,6 +183,8 @@ class ui:
         self.isu=var('isu',0,int)#self.isu.get() 下载源
         radiobt(self.sl,variable=self.isu,value=0,text='官方').grid(row=0,column=1)
         radiobt(self.sl,variable=self.isu,value=1,text='国内').grid(row=0,column=2)
+        self.upd=var('upd',1,int)
+        checkbt(self.sl,variable=self.upd,text='启动时检查更新').grid(row=0,column=3)
         lb(self.sl,text='下载线程数').grid(row=1)
         self.thd=var('thread',128,int)#self.thd.get() 下载线程数
         scale(self.sl,from_=8,to=256,width=10,length=400,resolution=8,variable=self.thd).grid(row=1,column=1,columnspan=10)
@@ -190,13 +193,43 @@ class ui:
         self.jvls=lsx(sg1,height=5,width=60,yscrollcommand=self._js.set);self.jvls.pack(side='left')
         self._js.config(command=self.jvls.yview)
         sg1.grid(row=2,columnspan=5)#self.jvls:listbox java列表
+        bt(self.sl,text='下载java',command=self.dljava).grid(row=2,column=5)
         #关于界面
         lb(self.ab,text='作者:_MhwsChina_').grid()
         lb(self.ab,text='项目:https://github.com/MhwsChina/MhCraft').grid()
         lb(self.ab,text=f'版本:{self.ver}').grid()
         lb(self.ab,text='开源协议:GPL-3.0').grid()
-        bt(self.ab,text='检查更新',command=self.noadd).grid()
+        bt(self.ab,text='检查更新',command=self.checkupdate).grid()
         ###end
+    def checkupdate(self,show=1):
+        t=time.strftime('%Y-%m-%d',time.localtime())
+        if getjs(('t',0))==t:
+            if show:mess.showwarning('警告','今天已经检查过更新了')
+            else:print('今天已经检查过更新了')
+            return
+        setjs(('t',t))
+        url,size,fn=getupdate(self.ver,_zip='.py' in sys.argv[0])
+        if not url:
+            if show:mess.showwarning('警告','已是最新版本了!')
+            else:print('已是最新版本了!')
+            return False
+        if not '.py' in sys.argv[0]:
+            shutil.move(sys.argv[0],'mhc/RemoveMe')
+            mess.showinfo('将自动下载','发现可用更新')
+            self.dlfile(url,fn)
+        else:umess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');mainui.addurlw(url)
+        return 1
+    def dljava(self):
+        rp=self.getrp()
+        url='https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json'
+        if rp:url=url.replace('launchermeta.mojang.com',rp)
+        osn1=fmosn(self.choose_list('windows','linux','mac-os',text='请选择系统',default=getosname().replace('osx','mac-os')))
+        d=urljson(url,timeout=5)[osn1];name=self.choose_list(*(i for i in d),text='请选择版本')
+        url1=d[name][0]['manifest']['url']
+        if rp:url1=url1.replace('piston-meta.mojang.com',rp)
+        self.dl.dls+=getjavaf(name,d=urljson(url1))
+        self.startdl(1,title='下载java')
+        self.loadjava()
     def resr(self):
         if not self.srs:self.srs,self.srtp=tuple(fmsearch(nlimit='mod',url=self.getmu())),'mod';
         self.resr1()
@@ -217,17 +250,18 @@ class ui:
     def dlmod(self):
         if self.step==0:
             print(self.srs[self.getscdl()][0:2])
-            self.srid,title,self.srml,self.srmcl,icon=self.srs[self.getscdl()]
-            self.srmcl=self.srmcl[::-1]
+            self.srid,title,self.srmcl,icon=self.srs[self.getscdl()]
+            self.srprj=getprjv2(self.srid,self.getmu())
+            self.srmcl,self.srml=self.srmcl[::-1],fmprj1(self.srprj)
             self.step=1
-            if not self.srtp in 'resourcepackdatapack':
+            if self.srtp not in 'resourcepackdatapack':
                 self.d1.config(text='模组加载器')
                 self.dll.delete(0,'end')
                 for i in self.srml:
                     self.dll.insert('end',i)
                 return
         if self.step==1:
-            if not self.srtp in 'resourcepackdatapack':self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
+            if self.srtp not in 'resourcepackdatapack':self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
             else:self.srm=None
             print(self.srm)
             self.step=2
@@ -239,21 +273,21 @@ class ui:
         if self.step==2:
             self.srmc=self.srmcl[self.getscdl('请在左侧选择mc版本!')]
             print(self.srmc)
-            self.srprj=tuple(getprjv2(self.srid,self.srmc,self.srm,url=self.getmu()))[::-1]
+            self.srprj1=sorted(fmprj(self.srprj,self.srmc,self.srm),key=lambda i:i[2],reverse=True)
             self.d1.config(text='资源版本')
             self.dll.delete(0,'end')
             self.srbt.config(text='下载')
-            for i in self.srprj:
+            for i in self.srprj1:
                 self.dll.insert('end',i[1])
             self.step=3;return
         if self.step==3:
-            srfl=self.srprj[self.getscdl('请在左侧选择资源版本!')][0][0]
+            srfl=self.srprj1[self.getscdl('请在左侧选择资源版本!')][0][0]
             print(srfl)
             mkdir(self.d.get(),'versions')
             sv=filedialog.asksaveasfilename(initialdir=pj(self.d.get(),'versions'),initialfile=srfl['filename'])
             if not sv:return
             url=srfl['url'].replace('cdn.modrinth.com',self.getmu1())
-            print(url,sv);self.dlfile(url,sv,join=0)
+            print(url,sv);self.dlfile(url,sv,join=0,chunk_size=2048)
             self.resr1();self.resr()
     def instml(self):
         ver=self.getscver()
@@ -298,7 +332,7 @@ class ui:
         self.remcl();mess.showinfo('提示',v+'安装完成')
     def rnmc(self):
         ver=self.getscver()
-        if not 'inheritsFrom' in readv(ver,self.d.get()):mess.showwarning('警告','该版本为原版,无法直接重命名!\n提示:复制该版本后,重命名复制的版本可达到一样的效果');return
+        if 'inheritsFrom' not in readv(ver,self.d.get()):mess.showwarning('警告','该版本为原版,无法直接重命名!\n提示:复制该版本后,重命名复制的版本可达到一样的效果');return
         nver=self.input_box(ver)
         p=pj(self.d.get(),'versions',ver)
         os.rename(pj(p,ver+'.json'),pj(p,nver+'.json'))
@@ -395,7 +429,7 @@ class ui:
         try:return self.jls[java['majorVersion']]
         except:
             self.dl.dls+=getjavaf(java['component'],rp=self.getrp())
-            self.startdl(1)
+            self.startdl(1,title='下载java')
             self.loadjava()
             return self.jls[java['majorVersion']]
     def bqwj(self,ver,chsha1=1,v=None,join=1):
@@ -415,12 +449,13 @@ class ui:
         self.remcl()
     def noadd(self):
         mess.showinfo('抱歉','当前功能还无法使用,后续会添加!')
-    def choose_list(self,*a,text='请选择'):
+    def choose_list(self,*a,text='请选择',default=None):
         w1,res,row=tk.Toplevel(w),tk.StringVar(),1
         ds=lambda x:w1.destroy()
         lb(w1,text=text).grid(row=0)
+        if default:res.set(default)
         for i in a:
-            if not res.get():res.set(i)
+            if not default and not res.get():res.set(i)
             radiobt(w1,text=i,variable=res,value=i).grid(row=row,columnspan=2)
             row+=1
         bt(w1,text='确定',command=w1.destroy).grid(row=row)
@@ -428,10 +463,10 @@ class ui:
         w.wait_window(w1)
         if not res.get():raise RuntimeError('用户取消了操作或输入为空')
         return res.get()
-    def input_box(self,normal=''):
+    def input_box(self,default=''):
         w1=tk.Toplevel(w)
         ds=lambda x:w1.destroy()
-        res=tk.StringVar();res.set(normal)
+        res=tk.StringVar();res.set(default)
         entry(w1,textvariable=res).grid(row=0,columnspan=2)
         bt(w1,text='取消',command=lambda:ds(res.set(''))).grid(row=1)
         bt(w1,text='确定',command=w1.destroy).grid(row=1,column=1)
@@ -450,7 +485,7 @@ class ui:
         w.wait_window(a)
     def updprog(self,a,b):
         while self.dl.threads:
-            b.set(len(self.dl.dls)+len(wrt))
+            b.set(len(self.dl.dls)+len(self.dl.threads))
             sleep(0.1)
         a.destroy()
     def startdl(self,join=0,title='文件下载'):
@@ -466,20 +501,24 @@ class ui:
     def loadjava(self):
         self.jls=findjava('mhc')
         self.jvls.delete(0,'end')
-        for i in self.jls.values():
-            self.jvls.insert('end',i)
+        for v,p in self.jls.items():
+            self.jvls.insert('end',f'{v}->{p}')
     def load(self):
         self.dl,self.u,self.vd=xcdl(),'bmclapi2.bangbang93.com',{}
         self.loaduser_to_ui()
-        if getjs('mem'):setjs('mem')
         if not os.path.exists(self.d.get()):
-            self.d.set('.minecraft')
-            mess.showwarning('警告','游戏目录不存在!已自动重置!')
+            try:os.makedirs(self.d.get())
+            except:
+                self.d.set('.minecraft')
+                mess.showwarning('警告','游戏目录不存在!已自动重置!')
         self.remcl()
         self.loadjava()
+        try:os.remove('mhc/RemoveMe')
+        except:pass
         if self.isu.get():vdurl='https://'+self.u+'/mc/game/version_manifest.json'
         else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
-        self.vd=urljson(vdurl);self.redl()
+        self.vd=urljson(vdurl,timeout=5);self.redl()
+        if self.upd.get():self.checkupdate(0)
     def redl(self):
         self.resr1()
         self.dll.delete(0,'end')
@@ -516,7 +555,7 @@ class ui:
         if usn:
             if not usn:mess.showwarning('警告','用户名长度不能小于1且不能为空!');return
             for i in usn.lower():
-                if not i in 'qwertyuiopasdfghjklzxcvbnm_1234567890':
+                if i not in 'qwertyuiopasdfghjklzxcvbnm_1234567890':
                     mess.showerror('输入不正确','用户名除了英文、数字、英文下划线"_"之外都不能包含!');return
             self.adus.set('')
             if self.addluser(usn):mess.showerror('错误','该用户已存在!');return
@@ -554,7 +593,7 @@ class ui:
         if ml:
             for i in ml:self.ml.set('模组加载器:'+i),self.mlv.set('加载器版本:'+ml[i])
         else:self.ml.set('模组加载器:无');self.mlv.set('加载器版本:无')
-    def dlfile(self,url,path,title='文件下载',join=1):
+    def dlfile(self,url,path,title='文件下载',join=1,chunk_size=32768,timeout=100):
         a=tk.Toplevel(w);a.title(title);a.resizable(0,0)
         a.protocol("WM_DELETE_WINDOW",lambda:1)
         t,z=tk.IntVar(),tk.IntVar()
@@ -563,7 +602,7 @@ class ui:
         lb(a,textvariable=z).grid(row=0,column=2)
         prg=ttk.Progressbar(a,length=340,mode='determinate')
         prg.grid(row=1,columnspan=3)#prg.start(100)
-        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg)).start()
+        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg,chunk_size)).start()
         if join:w.wait_window(a)
     def dlfilep(self,u,p,a,t,z,prg,chunk_size=32768,timeout=100):
         mkdir(os.path.split(p)[0])

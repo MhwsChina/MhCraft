@@ -26,7 +26,7 @@ def openfd(path):
 def urljson(url,timeout=100):
     while 1:
         try:return req.get(url,verify=False,timeout=timeout).json()
-        except:pass
+        except Exception as ex:print(ex)
 def dlurl(u,p,chunk_size=1048576,openf=open):
     mkdir(os.path.split(p)[0])
     while 1:

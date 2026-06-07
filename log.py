@@ -16,7 +16,7 @@ with open(cfp,'a+') as jfr:
 def getjs(*st):
     global js
     m,a=sys._getframe(1).f_globals['__name__'],[]
-    if not m in js:js[m]={}
+    if m not in js:js[m]={}
     if not [*st]:return js[m]
     for i in [*st]:
         t=i[0] if len(i)==2 else i

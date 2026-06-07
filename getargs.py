@@ -95,8 +95,8 @@ def getarg(ver,st,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
         vid,j,jvm,cp,game=v1['id'],v1['javaVersion'],getargjvm(v1,d,ver,abspath),getcp(v1,d,ver,abspath,[],[],[]),(getarggame(v1,d,st,ver,abspath) if not 'minecraftArguments' in v else [])
     else:jvm,cp,game=[],[[],[],[]],[]
     jvm+=getargjvm(v,d,ver,abspath);cp=getcp(v,d,ver,abspath,*cp);game+=getarggame(v,d,st,ver,abspath)
-    if not '${classpath}' in jvm:jvm+=['-cp','${classpath}']
-    if not '-p' in jvm:cp[0].append(pj(d,'versions',vid,vid+'.jar',abspath=abspath))
+    if '${classpath}' not in jvm:jvm+=['-cp','${classpath}']
+    if '-p' not in jvm:cp[0].append(pj(d,'versions',vid,vid+'.jar',abspath=abspath))
     jvm=[getcs().join(cp[0]) if i=='${classpath}' else i for i in jvm]
     return args+jvm+[v['mainClass'] if 'mainClass' in v else v1['mainClass']]+game,j
 '''

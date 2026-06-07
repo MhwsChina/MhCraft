@@ -65,11 +65,12 @@ class xcdl:
             with open(d['p'],d['a']) as f:
                 f.write(d['d'])
     def join(self):
-        for i in self.threads:
-            i.join()
-        try:self.wt.join(I)
+        while self.threads:
+            i=self.threads.pop(0)
+            try:i.join()
+            except Exception as ex:print(ex)
+        try:self.wt.join()
         except:pass
-        self.threads.clear()
 def rpliburl(url,rp):
     return url.replace('libraries.minecraft.net',rp)\
         .replace('files.minecraftforge.net',rp)\
@@ -85,7 +86,7 @@ def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/mav
             if rp:url=rpliburl(url,rp)
             p,h=pj(d,'libraries',l['downloads']['classifiers'][nt]['path']),l['downloads']['classifiers'][nt]['sha1']
             fs.append((url,p,h))
-            if not 'artifact' in l['downloads']:continue
+            if 'artifact' not in l['downloads']:continue
         if 'downloads' in l and 'artifact' in l['downloads']:
             url=l['downloads']['artifact']['url']
             if rp:url=rpliburl(url,rp)
@@ -94,7 +95,7 @@ def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/mav
         else:
             p,n,v,file=fmname(l['name'])
             pt=pj(p,n,v,file)
-            if not 'url' in l:continue
+            if 'url' not in l:continue
             url=pj(l['url'],pt)
             if rp:url=rpliburl(url,rp)
             p,h=pj(d,'libraries',pt),(l['sha1'] if 'sha1' in l else (l['checksums'] if 'checksums' in l else ''))

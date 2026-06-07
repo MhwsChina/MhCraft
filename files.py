@@ -9,7 +9,7 @@ def listlib(d=d):
             if 'downloads' in lib:
                 if 'classifiers' in lib['downloads']:
                     nt=lib['natives'][osn].replace('${arch}',arch)
-                    if not nt in lib['downloads']['classifiers']:continue
+                    if nt not in lib['downloads']['classifiers']:continue
                     fl=pj(lib['downloads']['classifiers'][nt]['path'])
                     try:fls[fl].append(ver)
                     except:fls[fl]=[ver]
