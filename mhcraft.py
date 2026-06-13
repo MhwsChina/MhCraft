@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_4'
+        self.ver='b1.0_5'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
@@ -223,11 +223,11 @@ class ui:
         rp=self.getrp()
         url='https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json'
         if rp:url=url.replace('launchermeta.mojang.com',rp)
-        osn1=fmosn(self.choose_list('windows','linux','mac-os',text='请选择系统',default=getosname().replace('osx','mac-os')))
+        osn1=fmosn(self.choose_list('windows','linux','mac-os',text='请选择系统',default=getosname().replace('osx','mac-os')))#;print(osn1);return
         d=urljson(url,timeout=5)[osn1];name=self.choose_list(*(i for i in d),text='请选择版本')
         url1=d[name][0]['manifest']['url']
         if rp:url1=url1.replace('piston-meta.mojang.com',rp)
-        self.dl.dls+=getjavaf(name,d=urljson(url1))
+        self.dl.dls+=getjavaf(name,p='mhc/java'+getosname(),d=urljson(url1))
         self.startdl(1,title='下载java')
         self.loadjava()
     def resr(self):
@@ -386,7 +386,7 @@ class ui:
         if not st:mess.showwarning('警告','未检测到使用中的用户!\n若没有添加,请在"用户"选项卡内添加并使用\n若已添加,请在"用户"选项卡内选择你要使用的用户并使用');return
         self.bqwj(ver,self.deepbq.get())
         args,jv=getarg(ver,st,self.d.get(),self.getmem(),1)
-        args[0]=self.getjava(jv)
+        args[0]=os.path.abspath(self.getjava(jv))
         th.Thread(target=mess.showinfo,args=('提示','启动完成,请等待游戏窗口出现!')).start()
         mkdir('mhc/temp');th.Thread(target=sbrun,args=(args,),kwargs={'cwd':'mhc/temp'}).start()
     def outmc(self):
@@ -485,7 +485,7 @@ class ui:
         w.wait_window(a)
     def updprog(self,a,b):
         while self.dl.threads:
-            b.set(len(self.dl.dls)+len(self.dl.threads))
+            b.set(len(self.dl.dls)+len(self.dl.threads)+len(wrt))
             sleep(0.1)
         a.destroy()
     def startdl(self,join=0,title='文件下载'):

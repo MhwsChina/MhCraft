@@ -11,9 +11,9 @@ def fmosn(osn):
             if sys.maxsize>2147483647:return 'windows-x64'
             else:return 'windows-x86'
     if osn=='linux':
-        if sys.maxsize>2147483647:return 'linux-i386'
-        else:return 'linux'
-def getjavaf(name,p='mhc/java',rp='',osn1=getosname(),d=None):
+        if sys.maxsize>2147483647:return 'linux'
+        else:return 'linux-i386'
+def getjavaf(name,p='mhc/java'+getosname(),rp='',osn1=getosname(),d=None):
     if not d:
         osn1=fmosn(osn1)
         url='https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json'

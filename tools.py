@@ -43,10 +43,10 @@ def pj(*p,cn='/',abspath=False):#连接路径 pj('a','b','c')返回'a/b/c' pj('c
     res=''
     for i in p:
         if not i:continue
-        if i[-1] in '\\/':i=i[0:-1]
-        if i[0] in '\\/':i=i[1:]
         i=i.replace('\\','/').split('/')
-        if res:res+=cn
+        if res:
+            if res[-1] not in '\\/':res+=cn
+        else:pass#if i[0] and ':' not in i[0]:res+='./'
         res+=cn.join(i)
     if abspath:return os.path.abspath(res)
     else:return res
@@ -160,7 +160,7 @@ def fmlver(vd):
     if 'arguments' in vd:
         for i in vd['arguments']['game']:
             try:
-                if t:dc[t]=i;break
+                if t:return {t:i}#dc[t]=i;break
             except:pass
             if '--fml.' in i:t=i.split('.')[1][:-7].lower()
     for i in vd['libraries']:
