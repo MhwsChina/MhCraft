@@ -19,9 +19,10 @@ shader光影包
 modpack整合包
 '''
 def fmsearch(text=None,limit=20,index='relevance',page=1,nlimit=None,url='api.modrinth.com'):
-    url=url=f'https://{url}/v2/search?limit={limit}&index={index}&page={page}'
+    print('search',text,'num=',limit,'page=',page,'type=',nlimit,'from=',url)
+    url=url=f'https://{url}/v2/search?limit={limit}&index={index}&offset={(page-1)*limit}'
     if text:url+=f'&query={text}'
-    if nlimit:url+=f'&new_filters=project_types%20%3D%20'+nlimit
+    if nlimit:url+=f'&new_filters=project_types = '+nlimit
     for i in req.get(url,timeout=1000).json()['hits']:
         yield i['project_id'],i['title'],i['versions'],i['icon_url']
 def getprjv2(project_id,url='api.modrinth.com'):

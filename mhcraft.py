@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_4'
+        self.ver='b1.0_6'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
