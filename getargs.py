@@ -110,7 +110,7 @@ getarg函数说明
         mc版本:要启动的mc版本,通常位于"mc目录/versions"下
         玩家信息:
             格式:{'name':玩家名,'uuid':玩家uuid,'token':玩家的登录token,'type':'legacy'}
-            'type'为选填,即玩家类型,不填即为legacy,legacy表示离线,mojang为第三方用户,microsoft为正版微软用户
+            'type'为选填选填,即玩家类型,不填即为legacy,legacy表示离线,mojang为第三方用户,microsoft为正版微软用户
             uuid格式详细见https://zh.minecraft.wiki/w/%E9%80%9A%E7%94%A8%E5%94%AF%E4%B8%80%E8%AF%86%E5%88%AB%E7%A0%81?variant=zh-cn
             token格式自己去搜
             玩家名必须为长度不少于1的字符串

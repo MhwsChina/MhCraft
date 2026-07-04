@@ -8,8 +8,12 @@ def exout(a, limit=None, file=None):
     print(f'[ThreadException]: {"->".join(walktraceback(a[2]))}:',a[1],mode='ERROR',start='\r')
 try:os.mkdir('mhc')
 except:pass
-cfp,usp='./mhc/config.json','./mhc/users.json'
-with open(cfp,'a+') as jfr:
+try:os.rename('mhc/users.json','mhc/profiles.json')#旧版本转换
+except:
+    try:os.remove('mhc/users.json')
+    except:pass
+configpath,profilepath='mhc/config.json','mhc/profiles.json'
+with open(configpath,'a+') as jfr:
     jfr.seek(0)
     try:js=loads(jfr.read())
     except:js={}
@@ -40,26 +44,26 @@ def setjs(*st,rt=0):
     savejs()
     if rt:return js[m]
 def savejs():
-    with open(cfp,'w') as f:f.write(dumps(js))
+    with open(configpath,'w') as f:f.write(dumps(js))
 def updatejs(a):
     global js
     js[sys._getframe(1).f_globals['__name__']]=a
     savejs()
-def alluser():
-    global users
-    with open(usp,'a+') as f:
+def allprf():
+    global profiles
+    with open(profilepath,'a+') as f:
         f.seek(0)
-        users=[loads(i.strip()) for i in f.readlines() if i]
-    return users
-def saveuser():
-    with open(usp,'w') as f:
-        [f.write(dumps(user)+'\n') for user in users]
-def rmuser(ind):
+        profiles=[loads(i.strip()) for i in f.readlines() if i]
+    return profiles
+def saveprf():
+    with open(profilepath,'w') as f:
+        [f.write(dumps(profiles)+'\n') for user in users]
+def rmprf(ind):
     try:
-        del users[ind]
-        saveuser()
+        del profiles[ind]
+        saveprf()
     except:raise
-def adduser(data):
-    users.append(data)
-    with open(usp,'a') as f:
+def addprf(data):
+    profiles.append(data)
+    with open(profilepath,'a') as f:
         f.write(dumps(data)+'\n')

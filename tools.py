@@ -89,9 +89,12 @@ def findver(txt,sep='',mode=int):
 def extzfa(fl,p,f=True):
     try:
         z=zipfile.ZipFile(fl)
-        z.extractall(p)
+        for f in z.namelist():
+            to=pj(p,f)
+            if os.path.exists(to):print(to,'exists');continue
+            z.extract(f,p)
+            print('extract',p)
         z.close()
-        print('extract',fl,'to',p)
     except:pass
 def extzf(zf,path,to,chunk_size=524288):
     if os.path.exists(to):print(to,'exists');return
@@ -115,8 +118,16 @@ def fmname(name,end='jar'):
 def mkdir(*p):
     try:os.makedirs(pj(*p))
     except:pass
-def caluuid(name):
-    return hashlib.sha1(name.encode()).hexdigest()[0:32]
+def caluuid(name):#mojang的uuid计算原理
+    md5_bytes=bytearray(hashlib.md5(f'OfflinePlayer:{name}'.encode('utf-8')).digest())
+    #设置 UUID 版本为 3 (0011xxxx)
+    #保留原字节低 4 位，高 4 位设为 0011 (即 0x30)
+    md5_bytes[6] = (md5_bytes[6] & 0x0F) | 0x30
+    #设置 UUID 变体为 RFC 4122 (10xxxxxx)
+    #保留原字节低 6 位，高 2 位设为 10 (即 0x80)
+    md5_bytes[8] = (md5_bytes[8] & 0x3F) | 0x80
+    #将 16 字节转换为 32 位十六进制字符串
+    return md5_bytes.hex()
 def fmbt(num):
     if num<=512:return '512m'
     if num%1024==0:return str(num//1024)+'g'

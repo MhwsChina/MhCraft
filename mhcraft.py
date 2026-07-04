@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as mess
 from tkinter import filedialog
-import psutil
+import psutil,auth
 from getargs import *
 from dl import *
 from java import *
@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_5'
+        self.ver='b1.0_4'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
@@ -54,7 +54,7 @@ class ui:
         self.nt=ttk.Notebook(w,style='m.TNotebook')
         self.rn=tk.Frame();self.nt.add(self.rn,text='启动')
         self.dl=tk.Frame();self.nt.add(self.dl,text='下载')
-        self.us=tk.Frame();self.nt.add(self.us,text='用户')
+        self.prf=tk.Frame();self.nt.add(self.prf,text='角色')
         self.st=ttk.Notebook(style='m1.TNotebook');self.nt.add(self.st,text='设置')
         self.ab=tk.Frame();self.nt.add(self.ab,text='关于')
         self.nt.grid(padx=10,pady=7)
@@ -126,16 +126,16 @@ class ui:
         bt(d3,text='搜索',width=12,command=self.srch).grid(row=3,column=1)
         self.srbt=bt(d3,text='选择',width=12,command=self.dlmod);self.srbt.grid(row=3,column=2)
         d3.grid(row=1,column=1,sticky='w')
-        ###用户界面
-        u1=lbfrm(self.us,text='用户列表')
-        self._uss=tk.Scrollbar(u1,orient='vertical');self._uss.pack(side='right',fill='y')
-        self.usl=lsx(u1,width=40,height=11,yscrollcommand=self._uss.set);self.usl.pack(side='left')
-        self._uss.config(command=self.usl.yview)
+        ###角色界面
+        u1=lbfrm(self.prf,text='角色列表')
+        self._prfs=tk.Scrollbar(u1,orient='vertical');self._prfs.pack(side='right',fill='y')
+        self.prfl=lsx(u1,width=40,height=11,yscrollcommand=self._prfs.set);self.prfl.pack(side='left')
+        self._prfs.config(command=self.prfl.yview)
         u1.grid(row=0,column=0,rowspan=2)
-        u0=lbfrm(self.us,text='操作')
+        u0=lbfrm(self.prf,text='操作')
         u2=lbfrm(u0,text='离线用户')
-        lb(u2,text='用户名',width=5).grid(row=0)
-        self.adus=tk.StringVar();entry(u2,width=20,textvariable=self.adus).grid(row=0,column=1)
+        lb(u2,text='角色名',width=5).grid(row=0)
+        self.adprf=tk.StringVar();entry(u2,width=20,textvariable=self.adprf).grid(row=0,column=1)
         u2.grid(row=0,columnspan=2)
         u3=lbfrm(u0,text='第三方用户')
         lb(u3,text='服务器',width=5).grid(row=0)
@@ -146,18 +146,18 @@ class ui:
         lb(u3,text='密码',width=5).grid(row=2)
         self.adps=tk.StringVar();entry(u3,width=20,textvariable=self.adps).grid(row=2,column=1)
         u3.grid(row=1,columnspan=2)
-        bt(u0,text='登录并添加',width=10,command=self.adduser).grid(row=2)
-        bt(u0,text='使用(从左侧选择)',width=15,command=self.useuser).grid(row=2,column=1)
+        bt(u0,text='登录并添加',width=10,command=self.addprf).grid(row=2)
+        bt(u0,text='使用(从左侧选择)',width=15,command=self.useprf).grid(row=2,column=1)
         bt(u0,text='微软登录',width=10,command=self.noadd).grid(row=3,sticky='w')
-        bt(u0,text='删除(从左侧选择)',width=15,command=self.rmuser).grid(row=3,column=1,sticky='w')
+        bt(u0,text='删除(从左侧选择)',width=15,command=self.rmprf).grid(row=3,column=1,sticky='w')
         u0.grid(row=0,column=1)
-        u4=lbfrm(self.us,text='信息')
+        u4=lbfrm(self.prf,text='信息')
         lb(u4,text='当前使用:').grid(row=0)
-        self.usn=tk.StringVar();self.usn.set('无')
-        lb(u4,textvariable=self.usn,width=11).grid(row=0,column=1)
-        lb(u4,text='用户类型:').grid(row=1)
-        self.ustp=tk.StringVar();self.ustp.set('未知')
-        lb(u4,textvariable=self.ustp,width=11).grid(row=1,column=1)
+        self.prfn=tk.StringVar();self.prfn.set('无')
+        lb(u4,textvariable=self.prfn,width=11).grid(row=0,column=1)
+        lb(u4,text='角色类型:').grid(row=1)
+        self.prftp=tk.StringVar();self.prftp.set('未知')
+        lb(u4,textvariable=self.prftp,width=11).grid(row=1,column=1)
         u4.grid(row=0,column=2,sticky='nw')
         ###设置界面
         #设置-游戏界面
@@ -199,14 +199,13 @@ class ui:
         lb(self.ab,text='项目:https://github.com/MhwsChina/MhCraft').grid()
         lb(self.ab,text=f'版本:{self.ver}').grid()
         lb(self.ab,text='开源协议:GPL-3.0').grid()
+        if 'b' in self.ver:lb(self.ab,text='注:该版本为测试版,可能会出现部分问题,你可以前往github进行反馈').grid()
+        lb(self.ab,text='注:若更新下载太慢或无法更新,可前往https://wwbxb.lanzouw.com/b00yb7zrij进行下载,提取密码为2026').grid()
         bt(self.ab,text='检查更新',command=self.checkupdate).grid()
         ###end
     def checkupdate(self,show=1):
         t=time.strftime('%Y-%m-%d',time.localtime())
-        if getjs(('t',0))==t:
-            if show:mess.showwarning('警告','今天已经检查过更新了')
-            else:print('今天已经检查过更新了')
-            return
+        if getjs(('t',0))==t and not show:print('今天已经检查过更新了');return
         setjs(('t',t))
         url,size,fn=getupdate(self.ver,_zip='.py' in sys.argv[0])
         if not url:
@@ -216,8 +215,9 @@ class ui:
         if not '.py' in sys.argv[0]:
             shutil.move(sys.argv[0],'mhc/RemoveMe')
             mess.showinfo('将自动下载','发现可用更新')
-            self.dlfile(url,fn)
-        else:umess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');mainui.addurlw(url)
+            try:self.dlfile(url,fn,chunk_size=1024,timeout=10,rs=1)
+            except Exception as ex:mess.showerror('下载失败','不好!下载发生了错误!({ex})\n请重试或前往https://wwbxb.lanzouw.com/b00yb7zrij手动下载,提取密码为2026');return 0
+        else:mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');self.dlfile(url,'最新版源代码压缩包.zip',chunk_size=1024)
         return 1
     def dljava(self):
         rp=self.getrp()
@@ -326,7 +326,7 @@ class ui:
         if 'libraries' in dc:self.bqwj(v,chsha1=1,v=dc,join=0)
         self.bqwj(v,chsha1=1,join=1)
         java=self.getjava({'component':'java-runtime-gamma','majorVersion':17})
-        mess.showinfo('提示','安装即将开始第二步,程序可能会未响应并弹出黑色窗口,请勿关闭!否则将会安装失败,游戏将无法启动!整个过程需要1至两分钟!')
+        mess.showinfo('安装即将开始第二步','程序将会未响应,弹出黑色窗口并闪出一些文字,这是正常的,请勿关闭!否则将会安装失败,游戏将无法启动!\n整个过程需要1至两分钟,请耐心等待!')
         instforge_part2(lzp,dc,v,instp,java,self.d.get())
         if tag:movemc(ov,v);self.rmmc1(ov)
         self.remcl();mess.showinfo('提示',v+'安装完成')
@@ -381,21 +381,41 @@ class ui:
         self.startdl(1)
         self.remcl()
         mess.showinfo('提示',ver+'下载完毕')
-    def runmc(self):
-        ver,st=self.getscver(),getjs('scus')
-        if not st:mess.showwarning('警告','未检测到使用中的用户!\n若没有添加,请在"用户"选项卡内添加并使用\n若已添加,请在"用户"选项卡内选择你要使用的用户并使用');return
-        self.bqwj(ver,self.deepbq.get())
-        args,jv=getarg(ver,st,self.d.get(),self.getmem(),1)
+    def runmc(self,rt=0):
+        ver,prf=self.getscver(),getjs('scprf')
+        if not prf:mess.showwarning('警告','未检测到使用中的角色!\n若没有添加,请在"角色"选项卡内添加并使用\n若已添加,请在"角色"选项卡内选择你要使用的角色并使用');return
+        self.bqwj(ver,self.deepbq.get());jvm=self.getmem()
+        if 'type' in prf and prf['type']=='mojang':
+            try:prf=self.checkprf(prf)
+            except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!')
+            self.bqauthlib()
+            srv=getjs(prf['serv'])
+            if not srv:srv=auth.fmapi();setjs((prf['serv'],srv))
+            jvm+=[f'-javaagent:{os.path.abspath("mhc/authlib-injector.jar")}={prf["serv"]}','-Dauthlibinjector.yggdrasil.prefetched='+srv]
+        args,jv=getarg(ver,prf,self.d.get(),jvm,1)  
         args[0]=os.path.abspath(self.getjava(jv))
+        if rt:return args,ver
         th.Thread(target=mess.showinfo,args=('提示','启动完成,请等待游戏窗口出现!')).start()
         mkdir('mhc/temp');th.Thread(target=sbrun,args=(args,),kwargs={'cwd':'mhc/temp'}).start()
+    def checkprf(self,prf):
+        if auth.check(prf['token'],prf['serv']):return prf
+        rf=auth.refresh(prf['token'],prf['serv'])
+        if 'error' in rf:raise RuntimeError(rf['errorMessage'])
+        prf['token']=rf;return prf
+    def bqauthlib(self):
+        if os.path.exists('mhc/authlib-injector.jar'):return
+        elif os.path.exists('PCL/authlib-injector.jar'):
+            shutil.copy('PCL/authlib-injector.jar','mhc/authlib-injector.jar')
+            return
+        else:
+            url='https://bmclapi2.bangbang93.com/mirrors/authlib-injector/' if self.isu.get() else 'https://authlib-injector.yushi.moe/'
+            dlurl=urljson(url+'/artifact/latest.json',timeout=10)['download_url']
+            self.dlfile(dlurl,'mhc/authlib-injector.jar',title='补全文件',chunk_size=1024,timeout=10,tishi=0)
     def outmc(self):
-        ver,st=self.getscver(),getjs('scus')
-        if not st:mess.showwarning('警告','未检测到使用中的用户!\n若没有添加,请在"用户"选项卡内添加并使用\n若已添加,请在"用户"选项卡内选择你要使用的用户并使用');return
-        args,jv=getarg(ver,st,self.d.get(),self.getmem(),0)
-        args[0]='"'+self.getjava(jv)+'"'
+        args,ver=self.runmc(1)
         path='run'+ver+'.bat' if os.name=='nt' else '.sh'
         with open(path,'w') as f:
+            f.write(f'cd {os.path.abspath("mhc/temp")}\n')
             for i in args:
                 if ' ' in i:i='"'+i+'"'
                 try:tag;f.write(' ')
@@ -455,7 +475,6 @@ class ui:
         lb(w1,text=text).grid(row=0)
         if default:res.set(default)
         for i in a:
-            if not default and not res.get():res.set(i)
             radiobt(w1,text=i,variable=res,value=i).grid(row=row,columnspan=2)
             row+=1
         bt(w1,text='确定',command=w1.destroy).grid(row=row)
@@ -505,72 +524,90 @@ class ui:
             self.jvls.insert('end',f'{v}->{p}')
     def load(self):
         self.dl,self.u,self.vd=xcdl(),'bmclapi2.bangbang93.com',{}
-        self.loaduser_to_ui()
+        try:self.loadprf_to_ui()
+        except:pass
         if not os.path.exists(self.d.get()):
             try:os.makedirs(self.d.get())
             except:
                 self.d.set('.minecraft')
                 mess.showwarning('警告','游戏目录不存在!已自动重置!')
-        self.remcl()
-        self.loadjava()
-        try:os.remove('mhc/RemoveMe')
-        except:pass
+        self.remcl();self.loadjava()
         if self.isu.get():vdurl='https://'+self.u+'/mc/game/version_manifest.json'
         else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
         self.vd=urljson(vdurl,timeout=5);self.redl()
+        try:os.remove('mhc/RemoveMe')
+        except:pass
+        try:shutil.rmtree('mhc/temp/logs')
+        except:pass
+        try:shutil.rmtree('mhc/logs')
+        except:pass
         if self.upd.get():self.checkupdate(0)
     def redl(self):
         self.resr1()
         self.dll.delete(0,'end')
         for i in findv(self.vd,self.dlt.get()):
             self.dll.insert('end',i['id'])
-    def set_from_ui(self):
-        setjs(('thread',self.thd.get()),('isu',self.isu.get()))
-    def loaduser_to_ui(self):
-        users,name,user=alluser(),getjs('name'),getjs(('scus',{}))
-        if user:
-            self.usn.set([user['name']])
-            self.ustp.set({'msa':'微软','mojang':'第三方','legacy':'离线'}[(user['type'] if 'type' in user else 'legacy').lower()])
+    def loadprf_to_ui(self):
+        oldprf=getjs('scus')
+        if oldprf:setjs(('scprf',oldprf),'scus')
+        prfs,name,prf=allprf(),getjs('name'),getjs(('scprf',{}))
+        if prf:
+            self.prfn.set([prf['name']])
+            self.prftp.set({'msa':'微软','mojang':'第三方','legacy':'离线'}[(prf['type'] if 'type' in prf else 'legacy').lower()])
         if name:
-            self.addluser(data={'name':name,'uuid':getjs('uuid'),'token':getjs('token')})
+            self.addlprf(name)
             setjs('name','uuid','token')
-        self.usl.delete(0,'end')
-        for i in users:
-            self.usl.insert('end',i['name'])
-    def useuser(self):
-        if not alluser():mess.showerror('错误','你没添加用户!');return
-        sc=self.usl.curselection()
-        if not sc:mess.showerror('错误','请在左侧选择一个用户!');return
-        setjs(('scus',alluser()[sc[0]]))
-        self.loaduser_to_ui()
-    def addluser(self,usn=None,data=None):
+        self.prfl.delete(0,'end')
+        for i in prfs:
+            self.prfl.insert('end',i['name'])
+    def useprf(self):
+        if not allprf():mess.showerror('错误','你没添加角色!');return
+        sc=self.prfl.curselection()
+        if not sc:mess.showerror('错误','请在左侧选择一个角色!');return
+        setjs(('scprf',allprf()[sc[0]]))
+        self.loadprf_to_ui()
+    def addlprf(self,prfn=None,data=None):
         if not data:
-            uuid=caluuid(usn)
-            data={'name':usn,'uuid':uuid,'token':uuid}
-        if data in alluser():return 1
-        adduser(data)
-    def adduser(self):
+            uuid=caluuid(prfn)
+            data={'name':prfn,'uuid':uuid,'token':uuid}
+        if data in allprf():return 1
+        addprf(data)
+    def addprf(self):
         global js
-        usn,sv,em,ps=self.adus.get(),self.adsv.get(),self.adem.get(),self.adps.get()
-        if usn:
-            if not usn:mess.showwarning('警告','用户名长度不能小于1且不能为空!');return
-            for i in usn.lower():
+        prfn,sv,em,ps=self.adprf.get(),self.adsv.get(),self.adem.get(),self.adps.get()
+        if prfn:
+            if not prfn:mess.showwarning('警告','角色名长度不能小于1且不能为空!');return
+            for i in prfn.lower():
                 if i not in 'qwertyuiopasdfghjklzxcvbnm_1234567890':
-                    mess.showerror('输入不正确','用户名除了英文、数字、英文下划线"_"之外都不能包含!');return
-            self.adus.set('')
-            if self.addluser(usn):mess.showerror('错误','该用户已存在!');return
-            self.loaduser_to_ui()
+                    mess.showerror('输入不正确','角色名除了英文、数字、英文下划线"_"之外都不能包含!');return
+            self.adprf.set('')
+            if self.addlprf(prfn):mess.showerror('错误','该角色已存在!');return
+            self.loadprf_to_ui()
         elif sv and em and ps:
-            mess.showinfo('抱歉','添加第三方用户还无法使用,后续会添加!你可以先使用离线用户!')
-            #self.adem.set('');self.adps.set('')
+            try:prfs=self.addtu(em,ps,sv)
+            except Exception as ex:mess.showerror('错误','发生了错误:'+str(ex));return
+            #mess.showinfo('抱歉','添加第三方角色还无法使用,后续会添加!你可以先使用离线角色!')
+            self.adem.set('');self.adps.set('')
+            mess.showinfo('完成','角色'+','.join(prfs)+'已添加')
+            self.loadprf_to_ui()
         else:mess.showerror('错误','请填写完整的用户信息!')
-    def rmuser(self):
-        if not alluser():mess.showerror('错误','你没添加用户!');return
-        sc=self.usl.curselection()
-        if not sc:mess.showerror('错误','请在左侧选择一个用户!');return
-        if not mess.askyesno('再次确认','真的要删除该用户吗?'):return
-        rmuser(sc[0])
-        self.loaduser_to_ui()
+    def addtu(self,em,ps,sv):
+        res=auth.login(em,ps,sv);print(res)
+        if 'error' in res:raise RuntimeError(res['errorMessage'])
+        allu,u1=res['availableProfiles'],[]
+        if allu==[]:raise RuntimeError('没有添加过角色!')
+        for u in allu:
+            data={'name':u['name'],'token':res['accessToken'],'uuid':u['id'],'type':'mojang','serv':sv}
+            if data in allprf():continue
+            addprf(data);u1.append(u['name'])
+        return u1
+    def rmprf(self):
+        if not allprf():mess.showerror('错误','你没添加角色!');return
+        sc=self.prfl.curselection()
+        if not sc:mess.showerror('错误','请在左侧选择一个角色!');return
+        if not mess.askyesno('再次确认','真的要删除该角色吗?'):return
+        rmprf(sc[0])
+        self.loadprf_to_ui()
     def remcl(self):
         self.vl.delete(0,'end')
         for i in mclist(self.d.get()):
@@ -593,7 +630,7 @@ class ui:
         if ml:
             for i in ml:self.ml.set('模组加载器:'+i),self.mlv.set('加载器版本:'+ml[i])
         else:self.ml.set('模组加载器:无');self.mlv.set('加载器版本:无')
-    def dlfile(self,url,path,title='文件下载',join=1,chunk_size=32768,timeout=100):
+    def dlfile(self,url,path,title='文件下载',join=1,chunk_size=32768,timeout=100,tishi=1,rs=0):
         a=tk.Toplevel(w);a.title(title);a.resizable(0,0)
         a.protocol("WM_DELETE_WINDOW",lambda:1)
         t,z=tk.IntVar(),tk.IntVar()
@@ -602,10 +639,10 @@ class ui:
         lb(a,textvariable=z).grid(row=0,column=2)
         prg=ttk.Progressbar(a,length=340,mode='determinate')
         prg.grid(row=1,columnspan=3)#prg.start(100)
-        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg,chunk_size)).start()
+        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg,chunk_size,timeout,tishi,rs)).start()
         if join:w.wait_window(a)
-    def dlfilep(self,u,p,a,t,z,prg,chunk_size=32768,timeout=100):
-        mkdir(os.path.split(p)[0])
+    def dlfilep(self,u,p,a,t,z,prg,chunk_size=32768,timeout=100,tishi=1,rs=0):
+        mkdir(os.path.split(p)[0]);print('dl',u)
         while 1:
             try:
                 rs=req.get(u,timeout=timeout,verify=False,headers=hd,stream=True)
@@ -619,8 +656,11 @@ class ui:
                         tt=f.tell();t.set(tt)
                         if size:prg['value']=tt
                 break
-            except Exception as ex:print(ex)
-        a.destroy();mess.showinfo('提示','下载完成!')
+            except Exception as ex:
+                if rs:raise
+                print(ex)
+        a.destroy()
+        if tishi:mess.showinfo('提示','下载完成!')
 mui=ui()
 th.Thread(target=mui.load,name='loading').start()
 w.mainloop()
