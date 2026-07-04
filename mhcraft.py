@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_6'
+        self.ver='b1.0_7'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
@@ -68,7 +68,7 @@ class ui:
         r2=lbfrm(self.rn,text='操作')
         bt(r2,text='启动',width=5,command=self.runmc).grid(row=0,column=0)
         bt(r2,text='删除',width=5,command=self.rmmc).grid(row=0,column=1)
-        bt(r2,text='补全缺损文件',width=12,command=self.bqmc).grid(row=0,column=2)
+        bt(r2,text='修复缺损文件',width=12,command=self.bqmc).grid(row=0,column=2)
         bt(r2,text='导出启动脚本',width=12,command=self.outmc).grid(row=1,columnspan=2)
         bt(r2,text='修改版本名',width=12,command=self.rnmc).grid(row=1,column=2)
         bt(r2,text='复制版本',width=12,command=self.copymc).grid(row=2,columnspan=2)
@@ -389,28 +389,27 @@ class ui:
             try:prf=self.checkprf(prf)
             except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!')
             self.bqauthlib()
-            srv=getjs(prf['serv'])
-            if not srv:srv=auth.fmapi();setjs((prf['serv'],srv))
-            jvm+=[f'-javaagent:{os.path.abspath("mhc/authlib-injector.jar")}={prf["serv"]}','-Dauthlibinjector.yggdrasil.prefetched='+srv]
+            srv=getjs(prf['sv'])
+            if not srv:srv=auth.fmapi();setjs((prf['sv'],srv))
+            jvm+=[f'-javaagent:{os.path.abspath("mhc/authlib-injector.jar")}={prf["sv"]}','-Dauthlibinjector.yggdrasil.prefetched='+srv]
         args,jv=getarg(ver,prf,self.d.get(),jvm,1)  
         args[0]=os.path.abspath(self.getjava(jv))
         if rt:return args,ver
         th.Thread(target=mess.showinfo,args=('提示','启动完成,请等待游戏窗口出现!')).start()
         mkdir('mhc/temp');th.Thread(target=sbrun,args=(args,),kwargs={'cwd':'mhc/temp'}).start()
     def checkprf(self,prf):
-        if auth.check(prf['token'],prf['serv']):return prf
-        rf=auth.refresh(prf['token'],prf['serv'])
+        if auth.check(prf['token'],prf['sv']):return prf
+        rf=auth.refresh(prf['token'],prf['sv'])
         if 'error' in rf:raise RuntimeError(rf['errorMessage'])
         prf['token']=rf;return prf
     def bqauthlib(self):
-        if os.path.exists('mhc/authlib-injector.jar'):return
-        elif os.path.exists('PCL/authlib-injector.jar'):
-            shutil.copy('PCL/authlib-injector.jar','mhc/authlib-injector.jar')
-            return
-        else:
-            url='https://bmclapi2.bangbang93.com/mirrors/authlib-injector/' if self.isu.get() else 'https://authlib-injector.yushi.moe/'
-            dlurl=urljson(url+'/artifact/latest.json',timeout=10)['download_url']
-            self.dlfile(dlurl,'mhc/authlib-injector.jar',title='补全文件',chunk_size=1024,timeout=10,tishi=0)
+        if os.path.exists('mhc/authlib-injector.jar'):
+            n,v=getjs(('authlib-sha',('sha256','eaf14bc5acffc7d885bd5bd5942b99f36d6299302beae356b2fc5807fe42652b')))
+            if chksha('mhc/authlib-injector.jar',mode=n)==v:return
+        url='https://bmclapi2.bangbang93.com/mirrors/authlib-injector/' if self.isu.get() else 'https://authlib-injector.yushi.moe/'
+        json=urljson(url+'/artifact/latest.json',timeout=10)
+        dlurl=json['download_url'];setjs(('authlib-sha',tuple(json['checksums'].items())[0]))
+        self.dlfile(dlurl,'mhc/authlib-injector.jar',title='补全文件',chunk_size=1024,timeout=10,tishi=0)
     def outmc(self):
         args,ver=self.runmc(1)
         path='run'+ver+'.bat' if os.name=='nt' else '.sh'
@@ -475,10 +474,12 @@ class ui:
         lb(w1,text=text).grid(row=0)
         if default:res.set(default)
         for i in a:
+            if not default and not res.get():res.set(i)
             radiobt(w1,text=i,variable=res,value=i).grid(row=row,columnspan=2)
             row+=1
         bt(w1,text='确定',command=w1.destroy).grid(row=row)
         bt(w1,text='取消',command=lambda:ds(res.set(''))).grid(row=row,column=1)
+        w1.protocol("WM_DELETE_WINDOW",lambda:ds(res.set('')))
         w.wait_window(w1)
         if not res.get():raise RuntimeError('用户取消了操作或输入为空')
         return res.get()
@@ -551,6 +552,7 @@ class ui:
         oldprf=getjs('scus')
         if oldprf:setjs(('scprf',oldprf),'scus')
         prfs,name,prf=allprf(),getjs('name'),getjs(('scprf',{}))
+        if prf and prf not in prfs:prf={};setjs(('scprf',{}))
         if prf:
             self.prfn.set([prf['name']])
             self.prftp.set({'msa':'微软','mojang':'第三方','legacy':'离线'}[(prf['type'] if 'type' in prf else 'legacy').lower()])
@@ -588,8 +590,8 @@ class ui:
             except Exception as ex:mess.showerror('错误','发生了错误:'+str(ex));return
             #mess.showinfo('抱歉','添加第三方角色还无法使用,后续会添加!你可以先使用离线角色!')
             self.adem.set('');self.adps.set('')
-            mess.showinfo('完成','角色'+','.join(prfs)+'已添加')
             self.loadprf_to_ui()
+            mess.showinfo('完成','角色'+','.join(prfs)+'已添加')
         else:mess.showerror('错误','请填写完整的用户信息!')
     def addtu(self,em,ps,sv):
         res=auth.login(em,ps,sv);print(res)
@@ -597,7 +599,7 @@ class ui:
         allu,u1=res['availableProfiles'],[]
         if allu==[]:raise RuntimeError('没有添加过角色!')
         for u in allu:
-            data={'name':u['name'],'token':res['accessToken'],'uuid':u['id'],'type':'mojang','serv':sv}
+            data={'name':u['name'],'token':res['accessToken'],'uuid':u['id'],'type':'mojang','sv':sv}
             if data in allprf():continue
             addprf(data);u1.append(u['name'])
         return u1

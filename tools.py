@@ -4,6 +4,15 @@ import subprocess as sub
 from json import loads,dumps
 req.urllib3.disable_warnings()
 hd={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36 Edg/148.0.0.0','Accept-Encoding': 'br'}
+def chksha(p,mode='sha1',chunk_size=1048576):
+    if mode not in hashlib.algorithms_available:raise RuntimeError('不支持该模式!')
+    sha=hashlib.new(mode)
+    with open(p,'rb') as f:
+        c=f.read(chunk_size)
+        while c:
+            sha.update(c)
+            c=f.read(chunk_size)
+    return sha.hexdigest()
 def movemc(v1,v2,d):
     print('转移版本',v1,'->',v2)
     p=pj(d,'versions')

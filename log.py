@@ -57,7 +57,7 @@ def allprf():
     return profiles
 def saveprf():
     with open(profilepath,'w') as f:
-        [f.write(dumps(profiles)+'\n') for user in users]
+        [f.write(dumps(prf)+'\n') for prf in profiles]
 def rmprf(ind):
     try:
         del profiles[ind]

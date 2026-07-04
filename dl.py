@@ -29,14 +29,6 @@ class xcdl:
         self.threads=[]
         self.dls=[]
         #self.speed=0
-    def chksha1(self,p,chunk_size=1048576):
-        sha1=hashlib.sha1()
-        with open(p,'rb') as f:
-            c=f.read(chunk_size)
-            while c:
-                sha1.update(c)
-                c=f.read(chunk_size)
-        return sha1.hexdigest()
     def dl_th(self,chsha1=0,huancun=1):
         while self.dls:
             dct=self.dls.pop(0)
@@ -45,7 +37,7 @@ class xcdl:
             if not u:continue
             if os.path.exists(p):
                 if not s or not chsha1:continue
-                if self.chksha1(p) in s:continue      
+                if chksha(p) in s:continue      
             #print('下载',u)
             dlurl(u,p,openf=(mopen if huancun else open))
     def start(self,thread,chsha1=1,huancun=1):
