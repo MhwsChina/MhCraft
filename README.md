@@ -3,3 +3,4 @@
 感谢使用,有什么bug欢迎提出<br/>
 该项目为MhLauncher的重新编写版,功能会陆续加回去<br/>
 下载源代码后运行mhcraft.py可以使用</br>
+[点击前往蓝奏云下载](https://wwbxb.lanzouw.com/b00yb7zrij)密码:2026
