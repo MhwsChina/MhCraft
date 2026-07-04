@@ -9,10 +9,10 @@
 [issues-url]: https://img.shields.io/github/issues/MhwsChina/MhCraft.svg
 [license-shield]: https://img.shields.io/github/license/MhwsChina/MhCraft.svg?style=flat-square
 [license-url]: https://github.com/MhwsChina/MhCraft/blob/master/LICENSE
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
+[![Forks][forks-shield]][forks-url]
 [![Issues][issues-shield]][issues-url]
+[![Contributors][contributors-shield]][contributors-url]
 [![GPL-3 License][license-shield]][license-url]
 </br>
 这是一个mc启动器(使用python编写)</br>
