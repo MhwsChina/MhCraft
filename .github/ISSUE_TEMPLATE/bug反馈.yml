@@ -16,7 +16,7 @@ body:
     validations:
       required: true
   - type: textarea
-    id: contact
+    id: step
     attributes:
       label: 怎么触发这个BUG
       description: BUG触发的流程
@@ -29,7 +29,7 @@ body:
     validations:
       required: true
   - type: input
-    id: right
+    id: result
     attributes:
       label: 正确的结果应该是怎样？（选填）
       description: 程序正确情况下应该作出什么反应
@@ -45,7 +45,7 @@ body:
         - Linux
         - Mac-OS
         - 其他
-      default: Windows
+      default: 0
     validations:
       required: true
   - type: upload
