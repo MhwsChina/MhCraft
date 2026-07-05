@@ -1,31 +1,44 @@
-
-name: 'BUG反馈'
-description: '程序出问题了'
-title: '[BUG]-'
-labels: BUG
-assignees: ''
+name: BUG反馈
+description: 程序出问题了
+title: "[Bug]: "
+labels: ["bug", "triage"]
 body:
-- type: textarea
-  attributes:
-    label: '描述这个BUG'
-    description: '用较为详细的语言描述这个BUG是什么，正确的结果应该是怎样'
-  validations:
-    required: true
-- type: textarea
-  attributes:
-    label: '怎么触发这个BUG?'
-    description: '详细描述BUG触发的流程'
-    value: |
-      1、打开xxx
-      2、点击xxx
-      3、滑动xxx
-      4、出现了BUG
-  validations:
-    required: true
-- type: textarea
-  attributes:
-    label: '屏幕截图（可不填）'
-    description: '如果可以，上传几张BUG的截图'
-    placeholder: '请将文件拖拽到此处上传'
-  validations:
-    required: false
+  - type: markdown
+    attributes:
+      value: |
+        感谢填写BUG反馈！
+  - type: textarea
+    id: contact
+    attributes:
+      label: 描述这个BUG
+      description: 用详细的语言描述这个BUG是什么
+      placeholder: 在此描述
+    validations:
+      required: false
+  - type: input
+    id: right
+    attributes:
+      label: 正确的结果应该是怎样？（选填）
+      description: 程序正确情况下应该作出什么反应
+    validations:
+      required: false
+  - type: dropdown
+    id: os
+    attributes:
+      label: 你使用的是什么系统？
+      description: 选择你使用的操作系统
+      options:
+        - Windows
+        - Linux
+        - Mac-OS
+        - Other
+      default: 0
+    validations:
+      required: true
+  - type: upload
+    id: screenshots
+    attributes:
+      label: 屏幕截图（可不填）
+      description: 如果可以，上传几张BUG的截图来补充说明-
+    validations:
+      required: false
