@@ -1,0 +1,31 @@
+
+name: BUG反馈
+description: 程序出问题了
+title: '[BUG]-'
+labels: BUG
+assignees: ''
+body:
+- type: textarea
+  attributes:
+    label: 描述这个BUG
+    description: "用较为详细的语言描述这个BUG是什么，正确的结果应该是怎样"
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: 怎么触发这个BUG?
+    description: "详细描述BUG触发的流程"
+    value: |
+      1、打开xxx
+      2、点击xxx
+      3、滑动xxx
+      4、出现了BUG
+  validations:
+    required: true
+- type: textarea
+  attributes:
+    label: 屏幕截图（可不填）
+    description: "如果可以，上传几张BUG的截图"
+    placeholder: "请将文件拖拽到此处上传"
+  validations:
+    required: false
