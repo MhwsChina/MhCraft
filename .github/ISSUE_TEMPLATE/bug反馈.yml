@@ -1,7 +1,7 @@
 name: BUG反馈
 description: 程序出问题了
-title: "[Bug]: "
-labels: ["bug", "triage"]
+title: "[BUG]: "
+labels: ["BUG"]
 body:
   - type: markdown
     attributes:
@@ -11,7 +11,7 @@ body:
     id: contact
     attributes:
       label: 描述这个BUG
-      description: 用详细的语言描述这个BUG是什么
+      description: 用详细的语言描述这个BUG是什么（发生了什么）
       placeholder: 在此描述
     validations:
       required: true
@@ -44,14 +44,23 @@ body:
         - Windows
         - Linux
         - Mac-OS
-        - 其他
       default: 0
     validations:
       required: true
   - type: upload
     id: screenshots
     attributes:
-      label: 屏幕截图（可不填）
+      label: 屏幕截图（选填）
       description: 如果可以，上传几张截图来补充说明
     validations:
       required: false
+  - type: checkboxes
+    id: asdf
+    attributes:
+      label: 请确认
+      description: 请确认以下选项
+      options:
+        - label: 我使用的系统是Windows,Linux,Mac-OS三者之一(因为作者已经放弃支持各种各样的奇葩系统了)
+        - label: 我使用的软件版本是最新的
+        - label: 我确保没有人在issues中提到过这个问题
+          required: true
