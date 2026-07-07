@@ -56,14 +56,22 @@ def allprf():
         profiles=[loads(i.strip()) for i in f.readlines() if i]
     return profiles
 def saveprf():
+    global profiles
     with open(profilepath,'w') as f:
         [f.write(dumps(prf)+'\n') for prf in profiles]
 def rmprf(ind):
+    global profiles
     try:
         del profiles[ind]
         saveprf()
     except:raise
 def addprf(data):
+    global profiles
     profiles.append(data)
     with open(profilepath,'a') as f:
         f.write(dumps(data)+'\n')
+def updprf(prf):
+    global profiles
+    profiles.clear()
+    profiles+=prf
+    saveprf()

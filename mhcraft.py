@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='b1.0_7'
+        self.ver='v1.8'
         self.srs,self.step=[],0
         self.createW()
     def show(self):
@@ -387,7 +387,7 @@ class ui:
         self.bqwj(ver,self.deepbq.get());jvm=self.getmem()
         if 'type' in prf and prf['type']=='mojang':
             try:prf=self.checkprf(prf)
-            except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!')
+            except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!');return
             self.bqauthlib()
             srv=getjs(prf['sv'])
             if not srv:srv=auth.fmapi();setjs((prf['sv'],srv))
@@ -400,8 +400,17 @@ class ui:
     def checkprf(self,prf):
         if auth.check(prf['token'],prf['sv']):return prf
         rf=auth.refresh(prf['token'],prf['sv'])
-        if 'error' in rf:raise RuntimeError(rf['errorMessage'])
-        prf['token']=rf;return prf
+        if 'error' not in rf:prf['token']=rf;return prf
+        new,nprf,tag=auth.login(prf['em'],prf['ps'],prf['sv']),[],0
+        for i in new['availableProfiles']:
+            if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
+        for i in allprf():
+            if i.get('em','')==prf['em'] and i.get('sv','')==prf['sv']:i['token']=new['accessToken']
+            if tag and i.get('uuid')==prf['uuid']:i['name']=prf['name']
+            nprf.append(i)
+        updprf(nprf);print(nprf)
+        if tag:return prf
+        else:raise RuntimeError('该角色已经失效')
     def bqauthlib(self):
         if os.path.exists('mhc/authlib-injector.jar'):
             n,v=getjs(('authlib-sha',('sha256','eaf14bc5acffc7d885bd5bd5942b99f36d6299302beae356b2fc5807fe42652b')))
@@ -556,6 +565,7 @@ class ui:
         if prf:
             self.prfn.set([prf['name']])
             self.prftp.set({'msa':'微软','mojang':'第三方','legacy':'离线'}[(prf['type'] if 'type' in prf else 'legacy').lower()])
+        else:self.prfn.set('无'),self.prftp.set('未知')
         if name:
             self.addlprf(name)
             setjs('name','uuid','token')
@@ -599,7 +609,7 @@ class ui:
         allu,u1=res['availableProfiles'],[]
         if allu==[]:raise RuntimeError('没有添加过角色!')
         for u in allu:
-            data={'name':u['name'],'token':res['accessToken'],'uuid':u['id'],'type':'mojang','sv':sv}
+            data={'name':u['name'],'token':res['accessToken'],'uuid':u['id'],'type':'mojang','em':em,'ps':ps,'sv':sv}
             if data in allprf():continue
             addprf(data);u1.append(u['name'])
         return u1

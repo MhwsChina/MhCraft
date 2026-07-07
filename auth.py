@@ -57,7 +57,10 @@ def getprofile(uuid,apiurl=apiurl):
     2.若请求成功，退出流程，否则为继续执行
     3.运行refresh(角色的token,服务器api地址)，获得新的token
     4.若获取成功，退出流程
-    5.若获取失败，则该角色失效或被删除，报错，取消启动并删除该账户
+    5.运行login(email,password,服务器api地址)
+    6.保存token
+    7.从availableProfiles中找到和该角色uuid相同的角色并使用
+    8.找不到的话报错退出
 2.启动游戏
     1.下载authlib-injector
     2.添加额外的JVM参数(加在主类前)
