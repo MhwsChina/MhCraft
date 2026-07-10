@@ -36,7 +36,7 @@ def getargjvm(v,d,ver=None,abspath=0):
     if not 'arguments' in v:
         if 'minecraftArguments' in v:return ["-Djava.library.path="+pj(d,f'versions/{ver}/{ver}-natives',abspath=abspath)]
         else:return []
-    for jvm in v['arguments']['jvm']:
+    for jvm in v['arguments'].get('jvm',()):
         try:
             jv,rules=jvm['value'],jvm['rules']
             if prules(rules):
@@ -60,7 +60,7 @@ def getarggame(v,d,st,ver=None,abspath=0):
         if j:ls1.append(j)
         return ls1
     if not 'arguments' in v:return []
-    for ag in v['arguments']['game']:
+    for ag in v['arguments'].get('game',()):
         try:args.append(fmarggame(ag,v,d,st,gamed,ver,abspath=abspath))
         except KeyError:args.append(ag)
         except:pass #此处检测到非文本不直接退出为了适配pcl下载的json

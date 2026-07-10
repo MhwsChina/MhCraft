@@ -26,6 +26,7 @@ def fmsearch(text=None,limit=20,index='relevance',page=1,nlimit=None,url='api.mo
     for i in req.get(url,timeout=1000).json()['hits']:
         yield i['project_id'],i['title'],i['versions'],i['icon_url']
 def getprjv2(project_id,url='api.modrinth.com'):
+    print('getprj',project_id,'url=',url)
     url=f'https://{url}/v2/project/{project_id}/version'
     return req.get(url,timeout=1000).json()
 def fmprj1(json):

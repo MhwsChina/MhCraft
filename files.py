@@ -1,9 +1,8 @@
 from tools import *
-import shutil
 d='.minecraft'
 def listlib(d=d):
     fls,osn,arch={},getosname(),str(findver(platform.architecture()[0]))
-    for ver in os.listdir(pj(d,'versions')):
+    for ver in mclist(d):
         for lib in readv(ver,d)['libraries']:
             #if 'rules' in lib and not prules(lib['rules']):continue
             if 'downloads' in lib:
@@ -25,7 +24,7 @@ def listlib(d=d):
     return fls
 def listass(d=d):
     fls={}
-    for ver in os.listdir(pj(d,'versions')):
+    for ver in mclist(d):
         ass=readass(ver,d)
         if not ass:continue
         else:ass=ass['objects']

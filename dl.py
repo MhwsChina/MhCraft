@@ -67,6 +67,7 @@ def rpliburl(url,rp):
     return url.replace('libraries.minecraft.net',rp)\
         .replace('files.minecraftforge.net',rp)\
         .replace('maven.fabricmc.net',rp)
+        #.replace('maven.quiltmc.org/repository/release',rp)
 def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/maven
     fs=[]
     osn,arch=getosname(),str(findver(platform.architecture()[0]))
@@ -114,7 +115,7 @@ def dlver(vd,ver,d=d,rpl='',rpa='',v=None):
         if not v:v=readv(ver,d)
     except:
         if v:raise
-        rs=req.get(findv(vd,0,ver),timeout=100)
+        rs=req.get(findmcv(vd,0,ver),timeout=100)
         mkdir(d,'versions',ver)
         writec(pj(d,'versions',ver,ver+'.json'),rs.content)
         v=rs.json()

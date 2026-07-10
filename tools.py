@@ -1,4 +1,4 @@
-import re,platform,sys,zipfile,os,hashlib
+import re,platform,sys,zipfile,os,hashlib,shutil
 import requests as req
 import subprocess as sub
 from json import loads,dumps
@@ -16,11 +16,18 @@ def chksha(p,mode='sha1',chunk_size=1048576):
 def movemc(v1,v2,d):
     print('转移版本',v1,'->',v2)
     p=pj(d,'versions')
-    try:os.remove(pj(p,v1,v1+'.json'))
+    os.rename(pj(p,v1),pj(p,v2))
+    try:os.remove(pj(p,v2,v1+'.json'))
     except:pass
-    try:os.remove(pj(p,v1,v1+'.jar'))
+    try:os.remove(pj(p,v2,v1+'.jar'))
     except:pass
-    mkdir(pj(p,v2));shutil.copytree(pj(p,v1),pj(p,v2),dirs_exist_ok=True)
+def mergemc(v1,v2,d):
+    p=pj(d,'versions');p1,p2=pj(p,v1),pj(p,v2)
+    for i in os.listdir(p1):
+        src,dst=pj(p1,i),pj(p2,i)
+        os.rename(src,dst)
+        print('move'.src,'->',dst)
+    os.remove(p1)
 def sbrun(cmd,m=sub.run,**k):
     if os.name=='nt':k['creationflags']=sub.CREATE_NO_WINDOW
     return m(cmd,**k)
@@ -80,6 +87,11 @@ def getosname():
     name=platform.system().lower()
     if name=='darwin':return 'osx'
     else:return name
+def defaultmcpath():
+    osn=getosname()
+    if osn=='windows':return pj(os.environ['APPDATA'],'.minecraft')
+    if osn=='linux':return pj(os.path.expanduser('~'),'.minecraft')
+    if osn=='osx':return pj(os.environ['HOME'],'Library/Application Support/minecraft')
 def getcs():
     if getosname()=='windows':return ';'
     else:return ':'
@@ -141,7 +153,7 @@ def fmbt(num):
     if num<=512:return '512m'
     if num%1024==0:return str(num//1024)+'g'
     else:return str(int(num))+'m'
-def findv(vd,typ='release',find=False):
+def findmcv(vd,typ='release',find=False):
     #typ=release,snapshot,old_beta,old_alpha
     vs=[]
     for v in vd['versions']:
@@ -188,6 +200,7 @@ def fmlver(vd):
         elif 'forge:fmlloader' in i['name'] or 'forge:forge:' in i['name']:
             dc['forge']=i['name'].split('-')[1]
         elif 'quilt-loader:' in i['name']:dc['quilt']=i['name'].split(':')[-1]
+        elif 'OptiFine' in i['name']:dc['optifine']='_'.join(i['name'].split('_')[1:])
     return dc
     
 def getmlname(vd,vid):
