@@ -64,5 +64,5 @@ body:
           required: true
         - label: 我使用的软件版本是最新的
           required: true
-        - label: 我确保没有人在issues中提到过这个问题
+        - label: 我已在[Issues 页面](https://github.com/MhwsChina/MhCraft/issues)中搜索，确认了这一BUG未被提交过。
           required: true
