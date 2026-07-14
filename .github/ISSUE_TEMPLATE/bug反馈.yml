@@ -1,4 +1,4 @@
-name: BUG反馈
+name: 启动器BUG反馈
 description: 程序出问题了
 title: "[BUG]: "
 labels: ["BUG"]
