@@ -6,7 +6,7 @@
 [stars-shield]: https://img.shields.io/github/stars/MhwsChina/MhCraft.svg?style=flat-square
 [stars-url]: https://github.com/MhwsChina/MhCraft/stargazers
 [issues-shield]: https://img.shields.io/github/issues/MhwsChina/MhCraft.svg?style=flat-square
-[issues-url]: https://img.shields.io/github/issues/MhwsChina/MhCraft.svg
+[issues-url]: https://img.shields.io/github/issues
 [license-shield]: https://img.shields.io/github/license/MhwsChina/MhCraft.svg?style=flat-square
 [license-url]: https://github.com/MhwsChina/MhCraft/blob/master/LICENSE
 [![Stargazers][stars-shield]][stars-url]
