@@ -9,15 +9,15 @@ body:
       label: 检查项
       description: 请确认以下选项
       options:
-        - label: **我所启动的mc版本没有安装任何模组。(不过可以安装模组加载器)** 安装模组后才崩溃基本不是启动器导致的，如果删除模组可以启动请 **不要** 提交反馈。不过你可以在issues中发起提问来寻求帮助。
+        - label: "**我所启动的mc版本没有安装任何模组。(不过可以安装模组加载器)** 安装模组后才崩溃基本不是启动器导致的，如果删除模组可以启动请 **不要** 提交反馈。不过你可以在issues中发起提问来寻求帮助。"
           required: true
-        - label: **我已使用HMCL或PCL启动，并没有出现问题。** 如果HMCL和PCL都无法启动就不是该启动器导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)
+        - label: "**我已使用HMCL或PCL启动，并没有出现问题。** 如果HMCL和PCL都无法启动就不是该启动器导致的问题，请 **不要** 提交反馈。[下载 HMCL](https://hmcl.huangyuhui.net/download)"
           required: true
-        - label: 我已在[Issues 页面](https://github.com/MhwsChina/MhCraft/issues)中搜索，确认了这一BUG未被提交过。
+        - label: "我已在[Issues 页面](https://github.com/MhwsChina/MhCraft/issues)中搜索，确认了这一BUG未被提交过。"
           required: true
-        - label: 我使用的系统是Windows,Linux,Mac-OS三者之一(因为作者已经放弃支持各种各样的奇葩系统了)
+        - label: "我使用的系统是Windows,Linux,Mac-OS三者之一(因为作者已经放弃支持各种各样的奇葩系统了)"
           required: true
-        - label: 我使用的启动器版本是最新的
+        - label: "我使用的启动器版本是最新的"
           required: true
   - type: textarea
     id: "description"
