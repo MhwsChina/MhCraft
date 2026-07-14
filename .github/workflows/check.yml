@@ -1,0 +1,32 @@
+name: Check Release and Sync Assets
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  trigger-build:
+    if: github.event.release.target_commitish == 'main'
+    uses: ./.github/workflows/buildpy.yml
+    with:
+      release_tag: ${{ github.event.release.tag_name }}
+
+  sync-to-release:
+    needs: trigger-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: List downloaded files (Debug)
+        run: ls -R artifacts/
+
+      - name: Upload Assets to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: artifacts/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
