@@ -61,6 +61,8 @@ body:
       description: 请确认以下选项
       options:
         - label: 我使用的系统是Windows,Linux,Mac-OS三者之一(因为作者已经放弃支持各种各样的奇葩系统了)
+          required: true
         - label: 我使用的软件版本是最新的
+          required: true
         - label: 我确保没有人在issues中提到过这个问题
           required: true
