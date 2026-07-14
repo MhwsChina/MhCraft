@@ -1,0 +1,33 @@
+# Python 虚拟环境与缓存
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 打包/分发相关
+*.egg-info/
+dist/
+build/
+*.egg
+
+# PyInstaller 专属文件
+*.manifest
+*.spec
+*.toc
+*.log
+
+# 构建产物压缩包与可执行文件
+*.zip
+*.tar.gz
+*.exe
+*.app
+
+# IDE 与系统文件
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
