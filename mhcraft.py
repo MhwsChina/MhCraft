@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='v2.1'
+        self.ver='v2.3'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -307,7 +307,7 @@ class ui:
         ver=self.getscver()
         if '无' not in self.ml.get():mess.showerror('错误',f'无法安装!该版本已经安装过{self.ml.get()}了!\n若要更新,请点击"更新"按钮');return
         try:self.reg[self.scm.get()](ver)
-        except Exception as ex:raise;mess.showerror('错误','安装时发生了错误:'+str(ex))
+        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex))
     def updml(self):
         ver=self.getscver()
         if '无' in self.ml.get():mess.showerror('错误','无法更新!更新操作只能对安装过模组加载器的版本使用!\n若要安装,请点击"安装"按钮');return
@@ -609,8 +609,8 @@ class ui:
         self.vdc=urljson(vdurl,timeout=5);self.redl()
         try:os.remove('mhc/RemoveMe')
         except:pass
-        #try:shutil.rmtree('mhc/temp')
-        #except:pass
+        try:shutil.rmtree('mhc/temp')
+        except:pass
         try:shutil.rmtree('logs')
         except:pass
         self.showt()
