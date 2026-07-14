@@ -20,7 +20,7 @@
 该项目为MhLauncher的重新编写版,功能会陆续加回去</br>
 下载源代码后运行mhcraft.py可以使用</br>
 [[点击前往蓝奏云下载]](https://wwbxb.lanzouw.com/b00yb7zrij)密码:2026
-# MHCraft 自动化构建与发布系统
+# MhCraft 自动化构建与发布系统 (AI写的，仅供参考)
 
 本项目配置了完整的 GitHub Actions 自动化流水线。当针对 `main` 分支发布新的 Release 时，系统会自动在 Linux、Windows 和 macOS 平台上构建可执行文件，并将其同步到 Release 附件中。
 
