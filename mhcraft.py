@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='v2.0'
+        self.ver='v2.1'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -452,13 +452,15 @@ class ui:
         th.Thread(target=mess.showinfo,args=('提示','启动完成,请等待游戏窗口出现!')).start()
         th.Thread(target=sbrun,args=(args,),kwargs={'cwd':pj(d,'versions',ver)}).start()
     def checkprf(self,prf):
-        if auth.check(prf['token'],prf['sv']):return prf
-        rf=auth.refresh(prf['token'],prf['sv'])
-        if 'error' not in rf:prf['token']=rf;return prf
-        new,nprf,tag=auth.login(prf['em'],prf['ps'],prf['sv']),[],0
-        print('latestprofile=',new)
-        for i in new['availableProfiles']:
-            if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
+        if auth.check(prf['token'],prf['sv']):print('token right,end check token=',prf['token']);return prf
+        rf,nprf,tag=auth.refresh(prf['token'],prf['sv']),[],0
+        if 'error' in rf:
+            new=auth.login(prf['em'],prf['ps'],prf['sv'])
+            print('latestprofile=',new)
+            for i in new['availableProfiles']:
+                if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
+        else:
+            prf['token'],new,tag=rf,{'accessToken':rf}
         for i in allprf():
             if i.get('em','')==prf['em'] and i.get('sv','')==prf['sv']:i['token']=new['accessToken']
             if tag and i.get('uuid')==prf['uuid']:i['name']=prf['name']
