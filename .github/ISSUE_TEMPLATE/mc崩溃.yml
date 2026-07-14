@@ -1,6 +1,6 @@
 name: MC启动失败
 description: 启动游戏后mc窗口没有出现或闪退，又或者mc窗口出现了，但还在加载进度条的时候闪退了
-title: [MC启动BUG]: 
+title: "[MC启动BUG]:"
 labels: [BUG]
 body:
   - type: checkboxes
