@@ -65,7 +65,7 @@ def getarggame(v,d,st,ver=None,abspath=0):
         except KeyError:args.append(ag)
         except:pass #此处检测到非文本不直接退出为了适配pcl下载的json
     return args
-def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
+def getcp(v,d,ver=None,abscp=0,cps=[],fs=[],vs=[]):
     if not ver:ver=v['id']
     osn,ntd,arch=getosname(),pj(d,f'versions/{ver}/{ver}-natives'),str(findver(platform.architecture()[0]))
     for l in v['libraries']:
@@ -76,16 +76,15 @@ def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
             extzfa(path,ntd)
             if not 'actrifact' in l['downloads']:continue
         p,n,v,file=fmname(l['name'])
-        if ns and n in ns:
-            ind=ns.index(n)
-            v1,v2=findver(v),findver(vs[ind])
-            if v1>v2:
-                print('del',cps[ind])
-                del cps[ind],vs[ind],ns[ind]
-            if v1<v2:print('skip',n,v);continue
-        ns.append(n);vs.append(v)
+        if file in fs:
+            ind=fs.index(n);v1=vs[ind]
+            if v>v1:
+                print('replace','v=',v,'v1=',v1,'target=',cps[ind])
+                del cps[ind],vs[ind],fs[ind]
+            else:print('skip',p,n,v,file,'repeat=',cps[ind]);continue
+        fs.append(file);vs.append(v)
         cps.append(pj(d,'libraries',p,n,v,file,abspath=abscp))
-    return (cps,ns,vs)
+    return (cps,fs,vs)
 def getarg(ver,st,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
     #java {jvm参数} -cp {classpath} {mainClass(主类名)} {游戏参数}
     v=readv(ver,d)

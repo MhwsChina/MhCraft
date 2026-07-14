@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='v1.9'
+        self.ver='v2.0'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -170,7 +170,7 @@ class ui:
         self.sg=tk.Frame();self.st.add(self.sg,text='游戏')
         lb(self.sg,text='运行内存(GB)').grid(row=0)
         #self.mem.get() 游戏运行内存(等于剩余内存GB整除3)
-        mem=psutil.virtual_memory().total//1073741824;self.mem=var('mem',mem//6,int)
+        mem=psutil.virtual_memory().total//1073741824;self.mem=var('mem',mem//4,int)
         scale(self.sg,from_=1,to=mem,width=10,length=400,variable=self.mem).grid(row=0,column=1,columnspan=10)
         #self.isgl=tk.IntVar()
         #checkbt(self.sg,variable=self.isgl,text='默认启用版本隔离').grid(row=0,column=2)
@@ -307,7 +307,7 @@ class ui:
         ver=self.getscver()
         if '无' not in self.ml.get():mess.showerror('错误',f'无法安装!该版本已经安装过{self.ml.get()}了!\n若要更新,请点击"更新"按钮');return
         try:self.reg[self.scm.get()](ver)
-        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex))
+        except Exception as ex:raise;mess.showerror('错误','安装时发生了错误:'+str(ex))
     def updml(self):
         ver=self.getscver()
         if '无' in self.ml.get():mess.showerror('错误','无法更新!更新操作只能对安装过模组加载器的版本使用!\n若要安装,请点击"安装"按钮');return
@@ -315,29 +315,27 @@ class ui:
         try:self.reg[self.ml.get()[6:]](ver,upd=1)
         except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex))
     def instfab(self,ver,upd=0):
-        d=self.d.get();vd,tag,fbv=readv(ver,d),None,None
-        if upd:ov,ver,fbv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['fabric'])
+        d=self.d.get();v1,vd,fbv=ver+'-fabric',readv(ver,d),None
+        if upd:v1,ver,fbv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['fabric'])
         url=self.u+'/fabric-meta' if self.isu.get() else 'meta.fabricmc.net'
         lt=latest_fabricloader(url)
         if fbv:
             if fbv>=findver(lt):raise RuntimeError('已经是最新版了')
-            else:print(fbv,'<',lt);tag=ver
-        v=instfabric(ver,lt,url,d,tag)
-        if tag:self.rmmc1(ov,rm=0);movemc(ov,v,d)
-        self.remcl();mess.showinfo('提示',v+'安装完成')
+            else:print(fbv,'<',lt);self.rmmc1(v1,rm=0)
+        v=instfabric(ver,lt,url,d,v1)
+        self.remcl();mess.showinfo('提示',v1+'安装完成')
     def instquilt(self,ver,upd=0):
-        d=self.d.get();vd,tag,fbv=readv(ver,d),None,None
-        if upd:ov,ver,fbv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['quilt'])
+        d=self.d.get();v1,vd,fbv=ver+'-quilt',readv(ver,d),None,None
+        if upd:v1,ver,fbv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['quilt'])
         #url=url=self.u+'/quilt-meta' if self.isu.get() else 'meta.quiltmc.net'
         lt=latest_quiltloader()
         if fbv:
             if fbv>=findver(lt):raise RuntimeError('已经是最新版了')
-            else:print(fbv,'<',lt);tag=ver
-        v=instquilt(ver,lt,d=d,v1=tag)
-        if tag:self.rmmc1(ov,rm=0);movemc(ov,v,d)
-        self.remcl();mess.showinfo('提示',v+'安装完成')
+            else:print(fbv,'<',lt);self.rmmc1(v1,rm=0)
+        v=instquilt(ver,lt,d=d,v1=v1)
+        self.remcl();mess.showinfo('提示',v1+'安装完成')
     def instopti(self,ver,upd=0):
-        mess.showinfo('提示','安装即将开始,程序可能会未响应,请勿关闭,这属于正常现象!')
+        if not mess.askokcancel('提示','安装即将开始,程序可能会未响应,请勿关闭,这属于正常现象!\n是否确认安装OptiFine?'):return
         d=self.d.get();vd,tag,opv=readv(ver,d),None,None
         if upd:ov,ver,opv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],fmlver(vd)['optifine']
         url,instp=opdlurl(ver),pj('mhc/temp','optifine-'+ver+'.jar')
@@ -353,38 +351,36 @@ class ui:
         self.remcl();mess.showinfo('提示','安装完成!')
     def instfg(self,ver,upd=0):
         mess.showinfo('提示','安装即将开始,程序可能会未响应,请勿关闭,这属于正常现象!')
-        d=self.d.get();vd,tag,fgv=readv(ver,d),None,None
-        if upd:ov,ver,fgv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['forge'])
+        d=self.d.get();vd,fgv,v1=readv(ver,d),None,ver+'-forge'
+        if upd:v1,ver,fgv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['forge'])
         url,lt=forgedlurl(ver,self.u if self.isu.get() else 'files.minecraftforge.net')
         if fgv:
             if fgv>=findver(lt.split('-')[1]):raise RuntimeError('已经是最新版了')
-            else:print(fgv,'<',lt);tag=ver
+            else:print(fgv,'<',lt);self.rmmc1(v1,rm=0)
         instp=pj('mhc/temp','forge'+lt+'.jar')
         if not os.path.exists(instp):self.dlfile(url,instp,tishi=0,chunk_size=16384)
-        lzp,dc,v=instforge_part1(instp,d,tag)
-        if 'libraries' in dc:self.bqwj(v,chsha1=1,v=dc,join=0)
-        self.bqwj(v,chsha1=1,join=1);java=self.getjava()
+        lzp,fvd=instforge_part1(instp,d,v1)[0:2]
+        if 'libraries' in fvd:self.bqwj(v1,chsha1=1,vd=fvd,join=0)
+        self.bqwj(v1,chsha1=1,join=1);java=self.getjava()
         mess.showinfo('安装即将开始第二步','程序将会未响应,弹出黑色窗口并闪出一些文字,这是正常的,请勿关闭!否则将会安装失败,游戏将无法启动!\n整个过程需要1至两分钟,请耐心等待!')
-        instforge_part2(lzp,dc,instp,java,d)
-        if tag:self.rmmc1(ov,rm=0);movemc(ov,v,d)
-        self.remcl();mess.showinfo('提示',v+'安装完成')
+        instforge_part2(instp,lzp,fvd,java,d)
+        self.remcl();mess.showinfo('提示',v1+'安装完成')
     def instneo(self,ver,upd=0):
         mess.showinfo('提示','安装即将开始,程序可能会未响应,请勿关闭,这属于正常现象!')
-        d=self.d.get();vd,tag,fgv=readv(ver,d),None,None
-        if upd:ov,ver,fgv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['neoforge'])
+        d=self.d.get();vd,fgv,v1=readv(ver,d),None,ver+'-neoforge'
+        if upd:v1,ver,fgv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['neoforge'])
         url,lt=neodlurl(ver,self.u+'/maven' if self.isu.get() else 'maven.neoforged.net/releases')
         if fgv:
             if fgv>=findver(lt):raise RuntimeError('已经是最新版了')
-            else:print(fgv,'<',lt);tag=ver
+            else:print(fgv,'<',lt);self.rmmc1(v1,rm=0)
         instp=pj('mhc/temp','neoforge'+lt+'.jar')
         if not os.path.exists(instp):self.dlfile(url,instp,tishi=0,chunk_size=16384)
-        lzp,dc,v=instforge_part1(instp,d,tag)
-        if 'libraries' in dc:self.bqwj(v,chsha1=1,v=dc,join=0)
-        self.bqwj(v,chsha1=1,join=1);java=self.getjava()
+        lzp,fvd=instforge_part1(instp,d,v1)[0:2]
+        if 'libraries' in fvd:self.bqwj(v1,chsha1=1,vd=fvd,join=1)
+        self.bqwj(v1,chsha1=1,join=1);java=self.getjava()
         mess.showinfo('安装即将开始第二步','程序将会未响应,弹出黑色窗口并闪出一些文字,这是正常的,请勿关闭!否则将会安装失败,游戏将无法启动!\n整个过程需要1至两分钟,请耐心等待!')
-        instforge_part2(lzp,dc,v,instp,java,self.d.get())
-        if tag:self.rmmc1(ov,rm=0);movemc(ov,v,d)
-        self.remcl();mess.showinfo('提示',v+'安装完成')
+        instforge_part2(instp,lzp,fvd,java,d)
+        self.remcl();mess.showinfo('提示',v1+'安装完成')
     def rnmc(self):
         ver=self.getscver()
         if 'inheritsFrom' not in readv(ver,self.d.get()):mess.showwarning('警告','该版本为原版,无法直接重命名!\n提示:复制该版本后,重命名复制的版本可达到一样的效果');return
@@ -435,7 +431,7 @@ class ui:
     def dlmc(self):
         ver=self.dll.get(self.getscdl())
         #mess.showinfo('提示','按下"确认"开始下载'+ver+',程序会在后台下载')
-        self.dl.dls+=dlver(self.vd,ver,self.d.get(),*self.getrpl())
+        self.dl.dls+=dlver(self.vdc,ver,self.d.get(),*self.getrpl())
         self.startdl(1)
         self.remcl()
         mess.showinfo('提示',ver+'下载完毕')
@@ -460,15 +456,17 @@ class ui:
         rf=auth.refresh(prf['token'],prf['sv'])
         if 'error' not in rf:prf['token']=rf;return prf
         new,nprf,tag=auth.login(prf['em'],prf['ps'],prf['sv']),[],0
-        print(new)
+        print('latestprofile=',new)
         for i in new['availableProfiles']:
             if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
         for i in allprf():
             if i.get('em','')==prf['em'] and i.get('sv','')==prf['sv']:i['token']=new['accessToken']
             if tag and i.get('uuid')==prf['uuid']:i['name']=prf['name']
             nprf.append(i)
-        updprf(nprf);print(nprf)
-        if tag:return prf
+        updprf(nprf)
+        if tag:
+            if getjs('scus',{'uuid':''})['uuid']==prf['uuid']:setjs(('scus',prf))
+            return prf
         else:raise RuntimeError('该角色已经失效')
     def bqauthlib(self):
         if os.path.exists('mhc/authlib-injector.jar'):
@@ -519,8 +517,8 @@ class ui:
             self.startdl(1,title='下载java')
             self.loadjava()
             return self.jls[java['majorVersion']]
-    def bqwj(self,ver,chsha1=1,v=None,join=1):
-        self.dl.dls+=dlver(self.vd,ver,self.d.get(),*self.getrpl(),v)
+    def bqwj(self,ver,chsha1=1,vd=None,join=1):
+        self.dl.dls+=dlver(self.vdc,ver,self.d.get(),*self.getrpl(),vd)
         self.startdl(join,title='补全文件')
     def getrpl(self):return (self.u+'/maven',self.u+'/assets') if self.isu.get() else ('','')
     def getrp(self):return self.u if self.isu.get() else ''
@@ -580,7 +578,7 @@ class ui:
             sleep(0.1)
         a.destroy()
     def startdl(self,join=0,title='文件下载'):
-        t=self.dl.threads==[]
+        t=(self.dl.threads==[])
         self.dl.start(self.thd.get())
         if t:
             #self.crtprog()#if join:self.dl.join()#else:th.Thread(target=self.dl.join).start()
@@ -595,7 +593,7 @@ class ui:
         for v,p in self.jls.items():
             self.jvls.insert('end',f'{v}->{p}')
     def load(self):
-        self.dl,self.u,self.vd=xcdl(),'bmclapi2.bangbang93.com',{}
+        self.dl,self.u,self.vdc=xcdl(),'bmclapi2.bangbang93.com',{}
         try:self.loadprf_to_ui()
         except:pass
         if not os.path.exists(self.d.get()):
@@ -606,11 +604,11 @@ class ui:
         self.remcl();self.loadjava()
         if self.isu.get():vdurl='https://'+self.u+'/mc/game/version_manifest.json'
         else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
-        self.vd=urljson(vdurl,timeout=5);self.redl()
+        self.vdc=urljson(vdurl,timeout=5);self.redl()
         try:os.remove('mhc/RemoveMe')
         except:pass
-        try:shutil.rmtree('mhc/temp')
-        except:pass
+        #try:shutil.rmtree('mhc/temp')
+        #except:pass
         try:shutil.rmtree('logs')
         except:pass
         self.showt()
@@ -618,7 +616,7 @@ class ui:
     def redl(self):
         self.resr1()
         self.dll.delete(0,'end')
-        for i in findmcv(self.vd,self.dlt.get()):
+        for i in findmcv(self.vdc,self.dlt.get()):
             self.dll.insert('end',i['id'])
     def loadprf_to_ui(self):
         oldprf=getjs('scus')

@@ -66,12 +66,13 @@ class xcdl:
 def rpliburl(url,rp):
     return url.replace('libraries.minecraft.net',rp)\
         .replace('files.minecraftforge.net',rp)\
-        .replace('maven.fabricmc.net',rp)
+        .replace('maven.fabricmc.net',rp)\
+        .replace('maven.neoforged.net/releases',rp)
         #.replace('maven.quiltmc.org/repository/release',rp)
-def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/maven
+def getlibs(vd,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/maven
     fs=[]
     osn,arch=getosname(),str(findver(platform.architecture()[0]))
-    for l in v['libraries']:
+    for l in vd['libraries']:
         if 'rules' in l and not prules(l['rules']):continue
         if 'downloads' in l and 'classifiers' in l['downloads']:
             nt=l['natives'][osn].replace('${arch}',arch)
@@ -94,12 +95,12 @@ def getlibs(v,d=d,rp=''):#启用bmclapi则将rp改为bmclapi2.bangbang93.com/mav
             p,h=pj(d,'libraries',pt),(l['sha1'] if 'sha1' in l else (l['checksums'] if 'checksums' in l else ''))
             fs.append((url,p,h))
     return fs
-def getass(a,d,rp=''):
+def getass(ad,d,rp=''):
     if not rp:rp='https://resources.download.minecraft.net'
     else:rp='https://'+rp
     fs=[]
-    for i in a['objects']:
-        h=a['objects'][i]['hash']
+    for i in ad['objects']:
+        h=ad['objects'][i]['hash']
         p=pj(h[0:2],h)
         url=pj(rp,p)
         fs.append((url,pj(d,'assets/objects',p),h))
@@ -110,26 +111,25 @@ def getallv():
 def writec(file,c):
     with open(file,'wb') as f:
         f.write(c)
-def dlver(vd,ver,d=d,rpl='',rpa='',v=None):
+def dlver(vdc,ver,d=d,rpl='',rpa='',vd=None):
     try:
-        if not v:v=readv(ver,d)
+        if not vd:vd=readv(ver,d)
     except:
-        if v:raise
-        rs=req.get(findmcv(vd,0,ver),timeout=100)
+        rs=req.get(findmcv(vdc,0,ver),timeout=100)
         mkdir(d,'versions',ver)
         writec(pj(d,'versions',ver,ver+'.json'),rs.content)
-        v=rs.json()
-    fs=getlibs(v,d,rpl)
-    if 'downloads' in v:fs+=[(v['downloads']['client']['url'],pj(d,'versions',ver,ver+'.jar'),v['downloads']['client']['sha1'])]
-    if 'assetIndex' in v:
-        try:a=fmass(v,d)
+        vd=rs.json()
+    fs=getlibs(vd,d,rpl)
+    if 'downloads' in vd:fs+=[(vd['downloads']['client']['url'],pj(d,'versions',ver,ver+'.jar'),vd['downloads']['client']['sha1'])]
+    if 'assetIndex' in vd:
+        try:a=fmass(vd,d)
         except:
-            rs=req.get(v['assetIndex']['url'],timeout=100)
+            rs=req.get(vd['assetIndex']['url'],timeout=100)
             mkdir(d,'assets/indexes')
-            writec(pj(d,'assets/indexes',v['assetIndex']['id']+'.json'),rs.content)
+            writec(pj(d,'assets/indexes',vd['assetIndex']['id']+'.json'),rs.content)
             a=rs.json()
         fs+=getass(a,d,rpa)
-    if 'inheritsFrom' in v:fs+=dlver(vd,v['inheritsFrom'],d,rpl,rpa)
+    if 'inheritsFrom' in vd:fs+=dlver(vdc,vd['inheritsFrom'],d,rpl,rpa)
     return fs
 '''dl=xcdl()
 dl+=dlver({},'1.21.4')
