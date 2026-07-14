@@ -51,7 +51,7 @@ jobs:
           # --clean: 清理临时文件
           # -w: 隐藏控制台窗口 (Windows GUI模式)
           # -i: 设置可执行文件图标
-          pyinstaller --clean -w -i favicon.ico --onefile --name mhcraft mhcraft.py
+          pyinstaller --clean -w -i favicon.ico --onefile --name MhCraft mhcraft.py
 
       - name: Package Build Artifact
         shell: bash
