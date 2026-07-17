@@ -6,7 +6,6 @@ on:
 
 jobs:
   trigger-build:
-    # 已移除 main 分支限制，现在任何分支的 Release 都会触发构建
     uses: ./.github/workflows/buildpy.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
@@ -27,6 +26,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
-          files: artifacts/**/*.zip
+          # 匹配所有下载的 zip 文件
+          files: artifacts/**/*.zip 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
