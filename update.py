@@ -21,6 +21,6 @@ def getupdate(nowver,_zip=0):
     if nowver>=newver or not newver:return 0,0,0
     if _zip:return dic['zipball_url'],0,dic['tag_name']+'.zip'
     for i in dic['assets']:
-        if i['name']==find:
+        if i['name'] in find:
             return i['browser_download_url'],i['size'],split(sys.argv[0])[1]
     return 0,0,0
