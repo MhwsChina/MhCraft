@@ -10,6 +10,10 @@ on:
         required: true
         type: string
 
+# 核心修改：在这里添加 permissions 配置
+permissions:
+  contents: write
+
 jobs:
   trigger-build:
     uses: ./.github/workflows/buildpy.yml
@@ -17,7 +21,6 @@ jobs:
       release_tag: ${{ inputs.release_tag || github.event.release.tag_name }}
 
   sync-to-release:
-    # 核心：无论 trigger-build 成功还是失败，都执行此任务
     if: always() 
     needs: trigger-build
     runs-on: ubuntu-latest
@@ -34,7 +37,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
-          # 自动匹配所有下载成功的 zip 文件并上传
           files: artifacts/**/*.zip 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
