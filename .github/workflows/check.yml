@@ -10,7 +10,7 @@ on:
         required: true
         type: string
 
-# 核心修改：在这里添加 permissions 配置
+# 赋予工作流写入 Release 的权限
 permissions:
   contents: write
 
@@ -37,6 +37,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
-          files: artifacts/**/*.zip 
+          # 核心修复：直接匹配 artifacts 目录下所有的 mhcraft 可执行文件
+          files: |
+            artifacts/**/mhcraft
+            artifacts/**/mhcraft.exe
+          overwrite_files: true 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
