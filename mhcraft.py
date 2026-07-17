@@ -221,7 +221,8 @@ class ui:
         t=time.strftime('%Y-%m-%d',time.localtime())
         if getjs(('t',0))==t and not show:print('今天已经检查过更新了');return
         setjs(('t',t))
-        url,size,fn=getupdate(self.ver,_zip='.py' in sys.argv[0])
+        try:url,size,fn=getupdate(self.ver,_zip='.py' in sys.argv[0])
+        except Exception as ex:mess.showerror('错误','检查更新时遇到了以下错误:'+str(ex))
         if not url:
             if show:mess.showwarning('警告','已是最新版本了!')
             else:print('已是最新版本了!')

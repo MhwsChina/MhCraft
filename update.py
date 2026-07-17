@@ -9,11 +9,10 @@ url=f'https://api.github.com/repos/{auther}/{project}/releases'
 finds={'linux':('mhcraft-linux','mhcraft-linux-x64.zip'),
     'windows':('mhcraft.exe','mhcraft-windows-x64.zip'),
     'osx':('mhcraft-macos','mhcraft-macos-x64.zip'),
-    'windows-arm':('mhcraft-arm64.exe','mhcraft-windows-arm64.zip'),
-    'macos-arm':('mhcraft-macos-arm64','mhcraft-macos-arm64.zip')
 }
 def getupdate(nowver,_zip=0):
-    find=finds[getosname()+('-arm' if isarm else '')]
+    if not _zip and isarm():raise RuntimeError('抱歉,mhcraft没有提供arm系统的构建版本,请自行下载源代码')
+    find=finds[getosname()]
     json=req.get(url,timeout=10,verify=False).json()
     newver,nowver=None,float(".".join(findall(r"\d+",nowver)))
     i=json[0]
