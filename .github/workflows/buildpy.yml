@@ -11,7 +11,6 @@ on:
         required: false
         type: string
         default: '3.14'
-  # 新增：允许在 GitHub 网页端手动触发
   workflow_dispatch:
     inputs:
       release_tag:
@@ -66,8 +65,21 @@ jobs:
           pip install -r requirements.txt
 
       - name: Build with PyInstaller
+        shell: bash
         run: |
-          pyinstaller --clean -w -i favicon.ico --onefile --name mhcraft mhcraft.py
+          # 默认打包参数
+          PYINSTALLER_ARGS="--clean -w --onefile --name mhcraft mhcraft.py"
+          
+          # 仅在 Windows 环境下，且 favicon.ico 存在时，才添加图标参数
+          if [[ "${{ matrix.os }}" == windows-* ]] && [ -f "favicon.ico" ]; then
+            PYINSTALLER_ARGS="$PYINSTALLER_ARGS -i favicon.ico"
+            echo "✅ Found favicon.ico, applying icon..."
+          else
+            echo "⚠️ Skipping icon (Not Windows or favicon.ico not found)"
+          fi
+          
+          # 执行打包
+          pyinstaller $PYINSTALLER_ARGS
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
