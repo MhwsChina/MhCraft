@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release Tag (手动触发时填写，例如 v1.0.0)'
+        description: 'Release Tag (例如 v1.0.0)'
         required: true
         type: string
       python_version:
@@ -25,10 +25,11 @@ on:
 
 jobs:
   build:
+    # 关键：关闭 fail-fast，允许部分环境失败而不取消其他环境
     strategy:
       fail-fast: false 
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, windows-arm64, macos-arm64]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
             artifact_name: mhcraft-linux-x64
@@ -38,12 +39,6 @@ jobs:
             file_name: mhcraft.exe
           - os: macos-latest
             artifact_name: mhcraft-macos-x64
-            file_name: mhcraft
-          - os: windows-arm64
-            artifact_name: mhcraft-windows-arm64
-            file_name: mhcraft.exe
-          - os: macos-arm64
-            artifact_name: mhcraft-macos-arm64
             file_name: mhcraft
 
     runs-on: ${{ matrix.os }}
@@ -67,18 +62,13 @@ jobs:
       - name: Build with PyInstaller
         shell: bash
         run: |
-          # 默认打包参数
           PYINSTALLER_ARGS="--clean -w --onefile --name mhcraft mhcraft.py"
-          
-          # 仅在 Windows 环境下，且 favicon.ico 存在时，才添加图标参数
           if [[ "${{ matrix.os }}" == windows-* ]] && [ -f "favicon.ico" ]; then
             PYINSTALLER_ARGS="$PYINSTALLER_ARGS -i favicon.ico"
             echo "✅ Found favicon.ico, applying icon..."
           else
             echo "⚠️ Skipping icon (Not Windows or favicon.ico not found)"
           fi
-          
-          # 执行打包
           pyinstaller $PYINSTALLER_ARGS
 
       - name: Upload Artifact
