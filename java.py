@@ -1,6 +1,4 @@
 from tools import *
-def isarm():
-    if 'aarch' in platform.architecture()[0]:return 1
 def fmosn(osn):
     if osn=='osx':
         if isarm():return 'mac-os-arm64'

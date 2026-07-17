@@ -26,19 +26,30 @@ def fmsearch(text=None,limit=20,index='relevance',page=1,nlimit=None,url='api.mo
     for i in req.get(url,timeout=1000).json()['hits']:
         yield i['project_id'],i['title'],i['versions'],i['icon_url']
 def getprjv2(project_id,url='api.modrinth.com'):
-    print('getprj',project_id,'url=',url)
+    print('getprjv2',project_id,'url=',url)
     url=f'https://{url}/v2/project/{project_id}/version'
     return req.get(url,timeout=1000).json()
-def fmprj1(json):
+def fmprjv2(json,mcv,loader=None):
+    for i in json:
+        if mcv in i['game_versions'] and (loader in i['loaders'] if loader else 1):
+            yield i['files'],i['name'],i['date_published']
+def getprjv3(project_id,url='api.modrinth.com'):
+    print('getprjv3',project_id,'url=',url)
+    url=f'https://{url}/v3/project/{project_id}/version'
+    return req.get(url,timeout=1000).json()
+def fmprjv3(json,mcv,loader=None,version_number=None):
+    for i in json:
+        if mcv in i['game_versions'] and (loader in i['loaders'] if loader else 1) and (i['version_numver']==version_number if version_number else 1):
+            yield i['files'],i['name'],i['date_published'],i['dependencies']
+def getfilev3(ids,url='api.modrinth.com'):#此处ids为作品id的列表
+    url=f'https://{url}/v3/versions?ids={ids}'
+    return req.get(url,timeout=1000).json()
+def fmprjml(json):
     lds=()
     for i in json:
         #mcs+=tuple(j for j in i['game_versions'] if j not in mcs)
         lds+=tuple(j for j in i['loaders'] if j not in lds)
     return lds
-def fmprj(json,mcv,loader=None):
-    for i in json:
-        if mcv in i['game_versions'] and (loader in i['loaders'] if loader else 1):
-            yield i['files'],i['name'],i['date_published']
 def search(text=None,limit=20,index='downloads',page=1,nlimit=None):
     url=f'https://api.modrinth.com/v2/search?limit={limit}&index={index}&page={page}'
     if text:url+=f'&query={text}'
@@ -58,7 +69,8 @@ fmsearch(文本,数量,排序方式,页码,搜索内容(以上均可选)) -> gen
     ),
     ......
 ]
-getprjv2(project_id,mc版本,加载器(可选)) -> generator
+getprjv2返回版本信息v2
+fmprjv2(版本信息v2,mc版本,加载器(可选)) -> generator
 [
     (
         文件列表->list[
@@ -71,6 +83,29 @@ getprjv2(project_id,mc版本,加载器(可选)) -> generator
         ],
         资源版本名->str,
         发布日期->str
+    )
+    ......
+]
+getprjv3返回版本信息v3
+fmprjv3(版本信息v3,mc版本,加载器(可选),资源版本(可选)) -> generator
+[
+    (
+        文件列表->list[
+            文件信息->dict{
+                'url':下载地址->str,
+                'filename':文件名->str,
+                'hashes':hash值->dict{'sha1':sha1值->str,......}
+            },
+            ......
+        ],
+        资源版本名->str,
+        发布日期->str,
+        前置资源->dict{
+            'version_id':前置资源版本(可能为None)->str,
+            'project_id':前置资源id->str,
+            'file_name':应保存到本地的文件名->str,
+            'dependency_type':是否必需(若为"required"说明必需,否则为可选)->str
+        }
     )
     ......
 ]

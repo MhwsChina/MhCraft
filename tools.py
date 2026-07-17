@@ -13,6 +13,8 @@ def chksha(p,mode='sha1',chunk_size=1048576):
             sha.update(c)
             c=f.read(chunk_size)
     return sha.hexdigest()
+def isarm():
+    if 'aarch' in platform.architecture()[0]:return 1
 def movemc(v1,v2,d):
     print('转移版本',v1,'->',v2)
     p=pj(d,'versions')

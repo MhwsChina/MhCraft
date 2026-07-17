@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='v2.2'
+        self.ver='v2.3'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -227,10 +227,14 @@ class ui:
             else:print('已是最新版本了!')
             return False
         if not '.py' in sys.argv[0]:
-            shutil.move(sys.argv[0],'mhc/RemoveMe')
+            #shutil.move(sys.argv[0],'mhc/RemoveMe')
             mess.showinfo('将自动下载','发现可用更新')
-            try:self.dlfile(url,fn,chunk_size=1024,timeout=10,rs=1)
+            try:self.dlfile(url,'mhc/upd',chunk_size=1024,timeout=10,rs=1)
             except Exception as ex:mess.showerror('下载失败','不好!下载发生了错误!({ex})\n请重试或前往https://wwbxb.lanzouw.com/b00yb7zrij手动下载,提取密码为2026');return 0
+            os.rename(sys.argv[0],'mhc/RemoveMe')
+            if 'zip'in fn:extzfa('mhc/upd','./')
+            else:os.rename('mhc/upd',sys.argv[0])
+            mess.showinfo('提示','更新完成,请重启程序!');os._exit(0)
         else:mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');self.dlfile(url,'最新版源代码压缩包.zip',chunk_size=1024)
         return 1
     def dljava(self):
@@ -245,14 +249,13 @@ class ui:
         self.startdl(1,title='下载java')
         self.loadjava()
     def resr(self):
-        if not self.srs:self.srs,self.srtp=tuple(fmsearch(nlimit='mod',url=self.getmu())),'mod';
+        if not self.srs:self.srs=tuple(fmsearch(nlimit='mod',url=self.getmu()));
         self.resr1()
         self.d1.config(text='下载列表')
         self.dll.delete(0,'end')
         for i in self.srs:
             self.dll.insert('end',i[1])
     def srch(self):
-        self.srtp={'模组':'mod','资源包':'resourcepack','数据包':'datapack','光影':'shader'}[self.srt.get()]
         self.srs=tuple(fmsearch(self.src.get(),page=int(self.srp.get()),nlimit=self.srtp,url=self.getmu()))
         self.resr1();self.resr()
     def resr1(self):
@@ -266,16 +269,16 @@ class ui:
             print(self.srs[self.getscdl()][0:2])
             self.srid,title,self.srmcl,icon=self.srs[self.getscdl()]
             self.srprj=getprjv2(self.srid,self.getmu())
-            self.srmcl,self.srml=self.srmcl[::-1],fmprj1(self.srprj)
+            self.srmcl,self.srml=self.srmcl[::-1],fmprjml(self.srprj)
             self.step=1
-            if self.srtp not in 'resourcepackdatapack':
+            if self.srml!=['minecraft']:
                 self.d1.config(text='模组加载器')
                 self.dll.delete(0,'end')
                 for i in self.srml:
                     self.dll.insert('end',i)
                 return
         if self.step==1:
-            if self.srtp not in 'resourcepackdatapack':self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
+            if self.srml!=['minecraft']:self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
             else:self.srm=None
             print(self.srm)
             self.step=2
@@ -287,7 +290,7 @@ class ui:
         if self.step==2:
             self.srmc=self.srmcl[self.getscdl('请在左侧选择mc版本!')]
             print(self.srmc)
-            self.srprj1=sorted(fmprj(self.srprj,self.srmc,self.srm),key=lambda i:i[2],reverse=True)
+            self.srprj1=sorted(fmprjv2(self.srprj,self.srmc,self.srm),key=lambda i:i[2],reverse=True)
             self.d1.config(text='资源版本')
             self.dll.delete(0,'end')
             self.srbt.config(text='下载')
@@ -307,13 +310,13 @@ class ui:
         ver=self.getscver()
         if '无' not in self.ml.get():mess.showerror('错误',f'无法安装!该版本已经安装过{self.ml.get()}了!\n若要更新,请点击"更新"按钮');return
         try:self.reg[self.scm.get()](ver)
-        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex))
+        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex));raise
     def updml(self):
         ver=self.getscver()
         if '无' in self.ml.get():mess.showerror('错误','无法更新!更新操作只能对安装过模组加载器的版本使用!\n若要安装,请点击"安装"按钮');return
         #if self.scm.get() not in self.ml.get():mess.showerror('错误',f'无法更新!该版本已经安装过其他的{self.ml.get()}了!');return
         try:self.reg[self.ml.get()[6:]](ver,upd=1)
-        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex))
+        except Exception as ex:mess.showerror('错误','安装时发生了错误:'+str(ex));raise
     def instfab(self,ver,upd=0):
         d=self.d.get();v1,vd,fbv=ver+'-fabric',readv(ver,d),None
         if upd:v1,ver,fbv=ver,vd['inheritsFrom'] if 'inheritsFrom' in vd else vd['clientVersion'],findver(fmlver(vd)['fabric'])
@@ -441,7 +444,7 @@ class ui:
         self.bqwj(ver,self.deepbq.get());jvm=self.getmem()
         if 'type' in prf and prf['type']=='mojang':
             try:prf=self.checkprf(prf)
-            except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!');return
+            except Exception as ex:mess.showerror('错误','登陆时发生了错误:'+str(ex)+',可以尝试删除并重新添加该角色,确保账号正确再重试!');raise
             self.bqauthlib()
             srv=getjs(prf['sv'])
             if not srv:srv=auth.fmapi();setjs((prf['sv'],srv))
@@ -460,14 +463,15 @@ class ui:
             for i in new['availableProfiles']:
                 if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
         else:
-            prf['token'],new,tag=rf,{'accessToken':rf}
+            prf['token'],new,tag=rf,{'accessToken':rf},1
+            print('refresh token=',new)
         for i in allprf():
             if i.get('em','')==prf['em'] and i.get('sv','')==prf['sv']:i['token']=new['accessToken']
             if tag and i.get('uuid')==prf['uuid']:i['name']=prf['name']
             nprf.append(i)
         updprf(nprf)
         if tag:
-            if getjs('scus',{'uuid':''})['uuid']==prf['uuid']:setjs(('scus',prf))
+            if getjs('scprf')['uuid']==prf['uuid']:setjs(('scprf',prf))
             return prf
         else:raise RuntimeError('该角色已经失效')
     def bqauthlib(self):
@@ -608,6 +612,8 @@ class ui:
         else:vdurl='http://launchermeta.mojang.com/mc/game/version_manifest.json'
         self.vdc=urljson(vdurl,timeout=5);self.redl()
         try:os.remove('mhc/RemoveMe')
+        except:pass
+        try:os.remove('mhc/upd')
         except:pass
         try:shutil.rmtree('mhc/temp')
         except:pass
