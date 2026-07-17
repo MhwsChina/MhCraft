@@ -1,4 +1,4 @@
-name: Build MhCraft
+name: Build mhcraft
 
 on:
   workflow_call:
@@ -16,17 +16,23 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, windows-arm64, macos-arm64]
         include:
           - os: ubuntu-latest
-            artifact_name: mhcraft-linux
-            asset_name: mhcraft-linux.zip
+            artifact_name: mhcraft-linux-x64
+            asset_name: mhcraft-linux-x64.zip
           - os: windows-latest
-            artifact_name: mhcraft-windows
-            asset_name: mhcraft-windows.zip
+            artifact_name: mhcraft-windows-x64
+            asset_name: mhcraft-windows-x64.zip
           - os: macos-latest
-            artifact_name: mhcraft-macos
-            asset_name: mhcraft-macos.zip
+            artifact_name: mhcraft-macos-x64
+            asset_name: mhcraft-macos-x64.zip
+          - os: windows-arm64
+            artifact_name: mhcraft-windows-arm64
+            asset_name: mhcraft-windows-arm64.zip
+          - os: macos-arm64
+            artifact_name: mhcraft-macos-arm64
+            asset_name: mhcraft-macos-arm64.zip
 
     runs-on: ${{ matrix.os }}
 
@@ -48,16 +54,13 @@ jobs:
 
       - name: Build with PyInstaller
         run: |
-          # --clean: 清理临时文件
-          # -w: 隐藏控制台窗口 (Windows GUI模式)
-          # -i: 设置可执行文件图标
-          pyinstaller --clean -w -i favicon.ico --onefile --name MhCraft mhcraft.py
+          pyinstaller --clean -w -i favicon.ico --onefile --name mhcraft mhcraft.py
 
       - name: Package Build Artifact
         shell: bash
         run: |
           cd dist
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+          if [ "${{ matrix.os }}" == "windows-latest" ] || [ "${{ matrix.os }}" == "windows-arm64" ]; then
             zip -r ../${{ matrix.asset_name }} mhcraft.exe
           else
             zip -r ../${{ matrix.asset_name }} mhcraft
