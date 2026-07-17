@@ -25,7 +25,6 @@ on:
 
 jobs:
   build:
-    # 关键：关闭 fail-fast，允许部分环境失败而不取消其他环境
     strategy:
       fail-fast: false 
       matrix:
@@ -33,13 +32,14 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: mhcraft-linux-x64
-            file_name: mhcraft
+            # 核心修改：为不同平台指定独立的二进制文件名
+            binary_name: mhcraft-linux 
           - os: windows-latest
             artifact_name: mhcraft-windows-x64
-            file_name: mhcraft.exe
+            binary_name: mhcraft-windows.exe
           - os: macos-latest
             artifact_name: mhcraft-macos-x64
-            file_name: mhcraft
+            binary_name: mhcraft-macos
 
     runs-on: ${{ matrix.os }}
 
@@ -62,7 +62,7 @@ jobs:
       - name: Build with PyInstaller
         shell: bash
         run: |
-          PYINSTALLER_ARGS="--clean -w --onefile --name mhcraft mhcraft.py"
+          PYINSTALLER_ARGS="--clean -w --onefile --name ${{ matrix.binary_name }} mhcraft.py"
           if [[ "${{ matrix.os }}" == windows-* ]] && [ -f "favicon.ico" ]; then
             PYINSTALLER_ARGS="$PYINSTALLER_ARGS -i favicon.ico"
             echo "✅ Found favicon.ico, applying icon..."
@@ -75,5 +75,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: dist/${{ matrix.file_name }}
+          # 核心修改：使用新的二进制文件名进行上传
+          path: dist/${{ matrix.binary_name }}
           retention-days: 1
