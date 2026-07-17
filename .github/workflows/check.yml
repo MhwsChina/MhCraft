@@ -6,7 +6,7 @@ on:
 
 jobs:
   trigger-build:
-    if: github.event.release.target_commitish == 'main'
+    # 已移除 main 分支限制，现在任何分支的 Release 都会触发构建
     uses: ./.github/workflows/buildpy.yml
     with:
       release_tag: ${{ github.event.release.tag_name }}
