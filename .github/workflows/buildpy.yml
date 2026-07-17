@@ -14,25 +14,27 @@ on:
 
 jobs:
   build:
+    # 关闭 fail-fast，这样即使某个平台构建失败，其他平台也能继续完成
     strategy:
+      fail-fast: false 
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest, windows-arm64, macos-arm64]
         include:
           - os: ubuntu-latest
             artifact_name: mhcraft-linux-x64
-            asset_name: mhcraft-linux-x64.zip
+            file_name: mhcraft
           - os: windows-latest
             artifact_name: mhcraft-windows-x64
-            asset_name: mhcraft-windows-x64.zip
+            file_name: mhcraft.exe
           - os: macos-latest
             artifact_name: mhcraft-macos-x64
-            asset_name: mhcraft-macos-x64.zip
+            file_name: mhcraft
           - os: windows-arm64
             artifact_name: mhcraft-windows-arm64
-            asset_name: mhcraft-windows-arm64.zip
+            file_name: mhcraft.exe
           - os: macos-arm64
             artifact_name: mhcraft-macos-arm64
-            asset_name: mhcraft-macos-arm64.zip
+            file_name: mhcraft
 
     runs-on: ${{ matrix.os }}
 
@@ -56,19 +58,10 @@ jobs:
         run: |
           pyinstaller --clean -w -i favicon.ico --onefile --name mhcraft mhcraft.py
 
-      - name: Package Build Artifact
-        shell: bash
-        run: |
-          cd dist
-          if [ "${{ matrix.os }}" == "windows-latest" ] || [ "${{ matrix.os }}" == "windows-arm64" ]; then
-            zip -r ../${{ matrix.asset_name }} mhcraft.exe
-          else
-            zip -r ../${{ matrix.asset_name }} mhcraft
-          fi
-
+      # 核心修复：直接使用 upload-artifact，它会自动将文件压缩为 zip
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.asset_name }}
+          path: dist/${{ matrix.file_name }}
           retention-days: 1
