@@ -1,4 +1,4 @@
-# MhCraft
+# MhCraft - Minecraft启动器
 [contributors-shield]: https://img.shields.io/github/contributors/MhwsChina/MhCraft.svg?style=flat-square
 [contributors-url]: https://github.com/MhwsChina/MhCraft/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/MhwsChina/MhCraft.svg?style=flat-square
@@ -31,7 +31,6 @@
 ### 1. `check.yml` (检测与同步)
 - **触发时机**：当在 GitHub 上正式发布（Publish）一个指向 `main` 分支的 Release 时触发。
 - **核心职责**：
-  - 校验 Release 的目标分支是否为 `main`。
   - 调用 `buildpy.yml` 执行多平台构建。
   - 构建完成后，自动下载所有平台的构建产物（Artifact），并作为附件上传到当前 Release 页面。
 
@@ -51,8 +50,7 @@
 
 1. 进入 GitHub 仓库，点击右侧的 **Releases**。
 2. 点击 **Draft a new release**。
-3. 确保 **Target** 分支选择的是 `main`。
-4. 填写版本号（Tag）和发布标题。
+4. 填写信息。
 5. 点击底部的 **Publish release**（注意：必须是 Publish，Save as draft 不会触发）。
 6. 前往 **Actions** 页面，即可实时查看构建进度。构建完成后，刷新 Release 页面即可看到三个平台的压缩包附件。
 
