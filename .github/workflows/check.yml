@@ -39,8 +39,7 @@ jobs:
           tag_name: ${{ inputs.release_tag || github.event.release.tag_name }}
           # 核心修复：直接匹配 artifacts 目录下所有的 mhcraft 可执行文件
           files: |
-            artifacts/**/mhcraft
-            artifacts/**/mhcraft.exe
+            artifacts/**/**
           overwrite_files: true 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
