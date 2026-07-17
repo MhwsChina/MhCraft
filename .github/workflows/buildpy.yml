@@ -36,7 +36,7 @@ jobs:
             binary_name: mhcraft-linux 
           - os: windows-latest
             artifact_name: mhcraft-windows-x64
-            binary_name: mhcraft-windows.exe
+            binary_name: mhcraft.exe
           - os: macos-latest
             artifact_name: mhcraft-macos-x64
             binary_name: mhcraft-macos
