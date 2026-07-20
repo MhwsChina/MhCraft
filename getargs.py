@@ -82,7 +82,7 @@ def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
                 print('replace','v=',v,'v1=',v1,'target=',cps[ind])
                 del cps[ind],vs[ind],ns[ind]
             else:print('skip',p,n,v,file,'repeat=',ns[ind]);continue
-        ns.append(file);vs.append(v)
+        ns.append(n);vs.append(v)
         cps.append(pj(d,'libraries',p,n,v,file,abspath=abscp))
     return (cps,ns,vs)
 def getarg(ver,prf,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
