@@ -11,14 +11,14 @@ from tools import *
 d='.minecraft'
 
 def fmarggame(txt,v,d,prf,gamed,ver,abspath=0):#若在游戏左下角显示启动器名称就把v['type']改为启动器名称
-    return txt.replace('${auth_player_name}',st['name'])\
+    return txt.replace('${auth_player_name}',prf['name'])\
         .replace('${version_name}',ver)\
         .replace('${game_directory}',pj(gamed,abspath=abspath))\
         .replace('${assets_root}',pj(d,'assets',abspath=abspath))\
         .replace('${assets_index_name}',v['assets'])\
         .replace('${auth_uuid}',prf['uuid'])\
-        .replace('${auth_access_token}',st['token'])\
-        .replace('${user_type}',prf['type'] if 'type' in st else 'legacy')\
+        .replace('${auth_access_token}',prf['token'])\
+        .replace('${user_type}',prf['type'] if 'type' in prf else 'legacy')\
         .replace('${version_type}',v['type'] if 'type' in v else 'MhCraft')\
         .replace('${user_properties}','{}')\
         .replace('${game_assets}',pj(d,"assets/virtual/legacy",abspath=abspath))\
@@ -65,7 +65,7 @@ def getarggame(v,d,prf,ver=None,abspath=0):
         except KeyError:args.append(ag)
         except:pass #此处检测到非文本不直接退出为了适配pcl下载的json
     return args
-def getcp(v,d,ver=None,abscp=0,cps=[],fs=[],vs=[]):
+def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
     if not ver:ver=v['id']
     osn,ntd,arch=getosname(),pj(d,f'versions/{ver}/{ver}-natives'),str(findver(platform.architecture()[0]))
     for l in v['libraries']:
@@ -76,15 +76,15 @@ def getcp(v,d,ver=None,abscp=0,cps=[],fs=[],vs=[]):
             extzfa(path,ntd)
             if not 'actrifact' in l['downloads']:continue
         p,n,v,file=fmname(l['name'])
-        if file in fs:
-            ind=fs.index(n);v1=vs[ind]
+        if n in ns and 'native' not in file:
+            ind=ns.index(n);v1=vs[ind]
             if v>v1:
                 print('replace','v=',v,'v1=',v1,'target=',cps[ind])
-                del cps[ind],vs[ind],fs[ind]
-            else:print('skip',p,n,v,file,'repeat=',cps[ind]);continue
-        fs.append(file);vs.append(v)
+                del cps[ind],vs[ind],ns[ind]
+            else:print('skip',p,n,v,file,'repeat=',ns[ind]);continue
+        ns.append(file);vs.append(v)
         cps.append(pj(d,'libraries',p,n,v,file,abspath=abscp))
-    return (cps,fs,vs)
+    return (cps,ns,vs)
 def getarg(ver,prf,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
     #java {jvm参数} -cp {classpath} {mainClass(主类名)} {游戏参数}
     v=readv(ver,d)
