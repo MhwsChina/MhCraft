@@ -10,19 +10,19 @@
 from tools import *
 d='.minecraft'
 
-def fmarggame(txt,v,d,st,gamed,ver,abspath=0):#若在游戏左下角显示启动器名称就把v['type']改为启动器名称
+def fmarggame(txt,v,d,prf,gamed,ver,abspath=0):#若在游戏左下角显示启动器名称就把v['type']改为启动器名称
     return txt.replace('${auth_player_name}',st['name'])\
         .replace('${version_name}',ver)\
         .replace('${game_directory}',pj(gamed,abspath=abspath))\
         .replace('${assets_root}',pj(d,'assets',abspath=abspath))\
         .replace('${assets_index_name}',v['assets'])\
-        .replace('${auth_uuid}',st['uuid'])\
+        .replace('${auth_uuid}',prf['uuid'])\
         .replace('${auth_access_token}',st['token'])\
-        .replace('${user_type}',st['type'] if 'type' in st else 'legacy')\
+        .replace('${user_type}',prf['type'] if 'type' in st else 'legacy')\
         .replace('${version_type}',v['type'] if 'type' in v else 'MhCraft')\
         .replace('${user_properties}','{}')\
         .replace('${game_assets}',pj(d,"assets/virtual/legacy",abspath=abspath))\
-        .replace('${auth_session}',st['token'])
+        .replace('${auth_session}',prf['token'])
 def fmargjvm(txt,ver,d,cs,abspath=0):
     return txt.replace('${natives_directory}',pj(d,f'versions/{ver}/{ver}-natives',abspath=abspath))\
         .replace('${launcher_name}','MhCraft')\
@@ -45,11 +45,11 @@ def getargjvm(v,d,ver=None,abspath=0):
         except:
             args.append(fmargjvm(jvm,ver,d,cs,abspath=abspath))
     return args
-def getarggame(v,d,st,ver=None,abspath=0):
+def getarggame(v,d,prf,ver=None,abspath=0):
     if not ver:ver=v['id']
     args,gamed=[],pj(d,'versions',ver)
     if 'minecraftArguments' in v:
-        ls,ls1,j=fmarggame(v['minecraftArguments'],v,d,st,gamed,ver,abspath=abspath).split(),[],''
+        ls,ls1,j=fmarggame(v['minecraftArguments'],v,d,prf,gamed,ver,abspath=abspath).split(),[],''
         for i in ls:
             if i[0]=='-':
                 if j:ls1.append(j);j=''
@@ -61,7 +61,7 @@ def getarggame(v,d,st,ver=None,abspath=0):
         return ls1
     if not 'arguments' in v:return []
     for ag in v['arguments'].get('game',()):
-        try:args.append(fmarggame(ag,v,d,st,gamed,ver,abspath=abspath))
+        try:args.append(fmarggame(ag,v,d,prf,gamed,ver,abspath=abspath))
         except KeyError:args.append(ag)
         except:pass #此处检测到非文本不直接退出为了适配pcl下载的json
     return args
@@ -85,15 +85,15 @@ def getcp(v,d,ver=None,abscp=0,cps=[],fs=[],vs=[]):
         fs.append(file);vs.append(v)
         cps.append(pj(d,'libraries',p,n,v,file,abspath=abscp))
     return (cps,fs,vs)
-def getarg(ver,st,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
+def getarg(ver,prf,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
     #java {jvm参数} -cp {classpath} {mainClass(主类名)} {游戏参数}
     v=readv(ver,d)
     vid,j,args=v['id'],v.get('javaVersion',{}),args+['-XX:+UseG1GC','-XX:-UseAdaptiveSizePolicy','-XX:-OmitStackTraceInFastThrow','-Djdk.lang.Process.allowAmbiguousCommands=true','-Dlog4j2.formatMsgNoLookups=true']
     if 'inheritsFrom' in v:
         v1=readv(v['inheritsFrom'],d)
-        vid,j,jvm,cp,game=v1['id'],v1['javaVersion'],getargjvm(v1,d,ver,abspath),getcp(v1,d,ver,abspath,[],[],[]),(getarggame(v1,d,st,ver,abspath) if not 'minecraftArguments' in v else [])
+        vid,j,jvm,cp,game=v1['id'],v1['javaVersion'],getargjvm(v1,d,ver,abspath),getcp(v1,d,ver,abspath,[],[],[]),(getarggame(v1,d,prf,ver,abspath) if not 'minecraftArguments' in v else [])
     else:jvm,cp,game=[],[[],[],[]],[]
-    jvm+=getargjvm(v,d,ver,abspath);cp=getcp(v,d,ver,abspath,*cp);game+=getarggame(v,d,st,ver,abspath)
+    jvm+=getargjvm(v,d,ver,abspath);cp=getcp(v,d,ver,abspath,*cp);game+=getarggame(v,d,prf,ver,abspath)
     if '${classpath}' not in jvm:jvm+=['-cp','${classpath}']
     if '-p' not in jvm:cp[0].append(pj(d,'versions',vid,vid+'.jar',abspath=abspath))
     jvm=[getcs().join(cp[0]) if i=='${classpath}' else i for i in jvm]

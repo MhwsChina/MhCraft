@@ -40,7 +40,7 @@ class var(tk.Variable):
         self.set(self._default)
 class ui:
     def __init__(self):
-        self.ver='v3'
+        self.ver='v3.1'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -526,7 +526,7 @@ class ui:
             return self.jls[java['majorVersion']]
     def bqwj(self,ver,chsha1=1,vd=None,join=1):
         self.dl.dls+=dlver(self.vdc,ver,self.d.get(),*self.getrpl(),vd)
-        self.startdl(join,title='补全文件')
+        self.startdl(join,chsha1,title='补全文件')
     def getrpl(self):return (self.u+'/maven',self.u+'/assets') if self.isu.get() else ('','')
     def getrp(self):return self.u if self.isu.get() else ''
     def getmem(self):return ['java',f'-Xmx{self.mem.get()}g',f'-Xms{self.mem.get()}g']
@@ -584,9 +584,9 @@ class ui:
             b.set(len(self.dl.dls)+len(self.dl.threads)+len(wrt))
             sleep(0.1)
         a.destroy()
-    def startdl(self,join=0,title='文件下载'):
+    def startdl(self,join=0,chsha1=1,title='文件下载'):
         t=(self.dl.threads==[])
-        self.dl.start(self.thd.get())
+        self.dl.start(self.thd.get(),chsha1)
         if t:
             #self.crtprog()#if join:self.dl.join()#else:th.Thread(target=self.dl.join).start()
             th.Thread(target=self.dl.join).start()

@@ -13,7 +13,7 @@ def logout(email,password,apiurl=apiurl):
     data={'username':email,'password':password}
     return req.post(apiurl+'/authserver/signout/',json=data,headers=head,verify=False)
 def check(accesstoken,apiurl=apiurl):
-    if req.post(apiurl+'/authserver/validate/',json={'accessToken':accesstoken},headers=head,verify=False).status_code==204:return True
+    if req.post(apiurl+'/authserver/validate/',json={'accessToken':accesstoken},headers=head,verify=False).status_code==204:return 1
     else:return False
 def refresh(accesstoken,apiurl=apiurl):
     return req.post(apiurl+'/authserver/refresh/',json={'accessToken':accesstoken,'requestUser':True},headers=head,verify=False).json()
