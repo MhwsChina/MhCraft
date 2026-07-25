@@ -4,27 +4,28 @@ import base64
 head={'Content-Type':'application/json; charset=utf-8'}
 #class thirdauth:#第三方登录模块
 apiurl='https://littleskin.cn/api/yggdrasil'#api地址,默认littleskin
-def getapiurl(url='https://littleskin.cn'):#获取api地址
-    return req.get(url,timeout=100,verify=False).headers['x-authlib-injector-api-location']
-def login(email,password,apiurl=apiurl):
-    data={'username':email,'password':password,'requestUser':False,'agent':{'name':'Minecraft','version':1}}
-    return req.post(apiurl+'/authserver/authenticate/',json=data,headers=head,verify=False).json()
-def logout(email,password,apiurl=apiurl):
-    data={'username':email,'password':password}
-    return req.post(apiurl+'/authserver/signout/',json=data,headers=head,verify=False)
-def check(accesstoken,apiurl=apiurl):
-    if req.post(apiurl+'/authserver/validate/',json={'accessToken':accesstoken},headers=head,verify=False).status_code==204:return 1
-    else:return False
-def refresh(accesstoken,apiurl=apiurl):
-    return req.post(apiurl+'/authserver/refresh/',json={'accessToken':accesstoken,'requestUser':True},headers=head,verify=False).json()
-def delete(accesstoken,apiurl=apiurl):
-    return req.post(apiurl+'/authserver/invalidate/',json={'accessToken':accesstoken,'requestUser':True},headers=head,verify=False)
-def fmapi(apiurl=apiurl):
-    return base64.b64encode(req.get(apiurl,headers=head,verify=False).content).decode()
-def getjvm(jarp,apiurl=apiurl):
-    return [f'-javaagent:{jarp}={apiurl}',f'-Dauthlibinjector.yggdrasil.prefetched={fmapi(apiurl)}']
-def getprofile(self,uuid,apiurl=apiurl):
-    return loads(base64.b64decode(req.get(apiurl+'/sessionserver/session/minecraft/profile/'+uuid,headers=head,verify=False).json()['properties'][0]['value']))
+class auth:
+    def getapiurl(url='https://littleskin.cn'):#获取api地址
+        return req.get(url,timeout=100,verify=False).headers['x-authlib-injector-api-location']
+    def login(email,password,apiurl=apiurl):
+        data={'username':email,'password':password,'requestUser':False,'agent':{'name':'Minecraft','version':1}}
+        return req.post(apiurl+'/authserver/authenticate/',json=data,headers=head,verify=False).json()
+    def logout(email,password,apiurl=apiurl):
+        data={'username':email,'password':password}
+        return req.post(apiurl+'/authserver/signout/',json=data,headers=head,verify=False)
+    def check(accesstoken,apiurl=apiurl):
+        if req.post(apiurl+'/authserver/validate/',json={'accessToken':accesstoken},headers=head,verify=False).status_code==204:return 1
+        else:return False
+    def refresh(accesstoken,apiurl=apiurl):
+        return req.post(apiurl+'/authserver/refresh/',json={'accessToken':accesstoken,'requestUser':True},headers=head,verify=False).json()
+    def delete(accesstoken,apiurl=apiurl):
+        return req.post(apiurl+'/authserver/invalidate/',json={'accessToken':accesstoken,'requestUser':True},headers=head,verify=False)
+    def fmapi(apiurl=apiurl):
+        return base64.b64encode(req.get(apiurl,headers=head,verify=False).content).decode()
+    def getjvm(jarp,apiurl=apiurl):
+        return [f'-javaagent:{jarp}={apiurl}',f'-Dauthlibinjector.yggdrasil.prefetched={fmapi(apiurl)}']
+    def getprofile(self,uuid,apiurl=apiurl):
+        return loads(base64.b64decode(req.get(apiurl+'/sessionserver/session/minecraft/profile/'+uuid,headers=head,verify=False).json()['properties'][0]['value']))
 class microsoftauth:#微软登录模块
     pass
 ###################第三方登录模块说明###################
@@ -59,7 +60,7 @@ class microsoftauth:#微软登录模块
 1.验证账户
     1.运行thirdauth.check(角色的token,服务器api地址)
     2.若请求成功，退出流程，否则为继续执行
-    3.运行thirdauth.refresh(角色的token,服务器api地址)，获得新的token
+    3.运行thirdauth.refresh(角色的token,服务器api地址)，获得新的token={返回结果}['accessToken']
     4.若获取成功，退出流程
     5.运行thirdauth.login(email,password,服务器api地址)
     6.保存token

@@ -2,7 +2,8 @@ import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as mess
 from tkinter import filedialog
-import psutil,auth
+import psutil
+from auth import *
 from getargs import *
 from dl import *
 from java import *
@@ -38,9 +39,18 @@ class var(tk.Variable):
         return self.type(getjs(self._name))
     def reset(self):
         self.set(self._default)
+class tempvar:
+    def __init__(self,default=''):
+        self.value=default
+    def set(self,value):
+        self.value=value
+    def get(self):
+        return self.value
+    def dest(self):
+        del self.value
 class ui:
     def __init__(self):
-        self.ver='v3.3'
+        self.ver='v3.4'
         self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
@@ -213,8 +223,8 @@ class ui:
         ###end
     def showt(self):
         t=int(time.time())
-        if t-getjs(('t1',0))>=3600*24*7:
-            if not mess.askokcancel('公告',self.text+'\n提示:按下"取消"一周内不再显示'):setjs(('t1',t))
+        if t-getjs(('t1',0))>=2592000:#一个月3600*24*30=2592000秒
+            if not mess.askokcancel('公告',self.text+'\n提示:按下"取消"一月内不再显示'):setjs(('t1',t))
     def export(self):
         self.noadd('导出整合包')
     def checkupdate(self,show=1):
@@ -257,7 +267,7 @@ class ui:
         for i in self.srs:
             self.dll.insert('end',i[1])
     def srch(self):
-        self.srs=tuple(fmsearch(self.src.get(),page=int(self.srp.get()),nlimit=self.srtp,url=self.getmu()))
+        self.srs=tuple(fmsearch(self.src.get(),page=int(self.srp.get()),nlimit={'模组':'mod','资源包':'resourcepack','数据包':'datapack','光影':'shader','整合包':'modpack'}[self.srt.get()],url=self.getmu()))
         self.resr1();self.resr()
     def resr1(self):
         self.d1.config(text='下载列表')
@@ -272,14 +282,14 @@ class ui:
             self.srprj=getprjv2(self.srid,self.getmu())
             self.srmcl,self.srml=self.srmcl[::-1],fmprjml(self.srprj)
             self.step=1
-            if self.srml!=['minecraft']:
+            if self.srml!=('minecraft',):
                 self.d1.config(text='模组加载器')
                 self.dll.delete(0,'end')
                 for i in self.srml:
                     self.dll.insert('end',i)
                 return
         if self.step==1:
-            if self.srml!=['minecraft']:self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
+            if self.srml!=('minecraft',):self.srm=self.srml[self.getscdl('请在左侧选择加载器!')]
             else:self.srm=None
             print(self.srm)
             self.step=2
@@ -305,7 +315,7 @@ class ui:
             sv=filedialog.asksaveasfilename(initialdir=pj(self.d.get(),'versions'),initialfile=srfl['filename'])
             if not sv:return
             url=srfl['url'].replace('cdn.modrinth.com',self.getmu1())
-            print(url,sv);self.dlfile(url,sv,join=0,chunk_size=2048)
+            self.dlfile(url,sv,join=0,chunk_size=2048,timeout=15,title='下载'+os.path.split(sv)[1],rs=0)
             self.resr1();self.resr()
     def instml(self):
         ver=self.getscver()
@@ -464,8 +474,8 @@ class ui:
             for i in new['availableProfiles']:
                 if i['id']==prf['uuid']:prf['name'],prf['token'],tag=i['name'],new['accessToken'],1;break
         else:
-            prf['token'],new,tag=rf,{'accessToken':rf},1
-            print('refresh token=',new)
+            rf=rf['accessToken'];prf['token'],new,tag=rf,{'accessToken':rf},1
+            print('refresh token=',rf)
         for i in allprf():
             if i.get('em','')==prf['em'] and i.get('sv','')==prf['sv']:i['token']=new['accessToken']
             if tag and i.get('uuid')==prf['uuid']:i['name']=prf['name']
@@ -595,7 +605,8 @@ class ui:
         else:
             if join:self.dl.join()
     def loadjava(self):
-        self.jls=findjava('mhc')
+        self.jls=findjava(pj(defaultmcpath(),'runtime'))
+        self.jls.update(findjava('mhc'))
         self.jvls.delete(0,'end')
         for v,p in self.jls.items():
             self.jvls.insert('end',f'{v}->{p}')
@@ -620,7 +631,7 @@ class ui:
         except:pass
         try:shutil.rmtree('logs')
         except:pass
-        self.showt()
+        #self.showt()
         if self.upd.get():self.checkupdate(0)
     def redl(self):
         self.resr1()
@@ -712,23 +723,27 @@ class ui:
         if ml:
             for i in ml:self.ml.set('模组加载器:'+i),self.mlv.set('加载器版本:'+ml[i])
         else:self.ml.set('模组加载器:无');self.mlv.set('加载器版本:无')
-    def dlfile(self,url,path,title='文件下载',join=1,chunk_size=32768,timeout=100,tishi=1,rs=0):
+    def dlfile(self,url,path,title='文件下载',join=1,chunk_size=32768,timeout=100,tishi='{p}',rs=0):
         a=tk.Toplevel(w);a.title(title);a.resizable(0,0)
-        a.protocol("WM_DELETE_WINDOW",lambda:1)
-        t,z=tk.IntVar(),tk.IntVar()
+        t,z,err=tk.IntVar(),tk.IntVar(),tempvar(0)
+        a.protocol("WM_DELETE_WINDOW",lambda:(err.set(prg,a.destroy()) if mess.askokcalcel('询问','是否取消下载?') else None))
         lb(a,textvariable=t).grid(row=0)
         lb(a,text='/').grid(row=0,column=1)
         lb(a,textvariable=z).grid(row=0,column=2)
         prg=ttk.Progressbar(a,length=340,mode='determinate')
         prg.grid(row=1,columnspan=3)#prg.start(100)
-        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,prg,chunk_size,timeout,tishi,rs)).start()
+        th.Thread(target=self.dlfilep,args=(url,path,a,t,z,err,prg,chunk_size,timeout,tishi,rs)).start()
         if join:w.wait_window(a)
-    def dlfilep(self,u,p,a,t,z,prg,chunk_size=32768,timeout=100,tishi=1,rs=0):
+        if err.get():raise err.get()
+    def del_tkobj(self,obj,*a):
+        del obj
+        raise RuntimeError('用户取消了下载')
+    def dlfilep(self,u,p,a,t,z,err,prg,chunk_size=32768,timeout=100,tishi='{p}',rs1=0):
         mkdir(os.path.split(p)[0]);print('dl',u)
         while 1:
             try:
                 rs=req.get(u,timeout=timeout,verify=False,headers=hd,stream=True)
-                if rs.status_code!=200:print(f'{u},resp code!=200')
+                if rs.status_code!=200:print(f'{u},resp code!=200');continue
                 size=int(rs.headers.get('Content-Length',0));z.set(size)
                 if size:prg['maximum']=size
                 else:prg['mode']='indeterminate';prg.start(100)
@@ -736,13 +751,15 @@ class ui:
                     for c in rs.iter_content(chunk_size=chunk_size):
                         f.write(c)
                         tt=f.tell();t.set(tt)
+                        if err.get()!=0:return
                         if size:prg['value']=tt
                 break
             except Exception as ex:
-                if rs:raise
                 print(ex)
+                if rs1:err.set(ex);a.destroy();return
         a.destroy()
-        if tishi:mess.showinfo('提示','下载完成!')
+        if tishi:
+            mess.showinfo('提示',tishi.format(p=p,u=u)+'下载完成!')
 mui=ui()
 th.Thread(target=mui.load,name='loading').start()
 w.mainloop()

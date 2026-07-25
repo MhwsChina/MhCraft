@@ -9,7 +9,6 @@
 #jvm参数也一样
 from tools import *
 d='.minecraft'
-
 def fmarggame(txt,v,d,prf,gamed,ver,abspath=0):#若在游戏左下角显示启动器名称就把v['type']改为启动器名称
     return txt.replace('${auth_player_name}',prf['name'])\
         .replace('${version_name}',ver)\
@@ -69,30 +68,34 @@ def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
     if not ver:ver=v['id']
     osn,ntd,arch=getosname(),pj(d,f'versions/{ver}/{ver}-natives'),str(findver(platform.architecture()[0]))
     for l in v['libraries']:
-        if 'rules' in l and not prules(l['rules']):continue
-        if 'downloads' in l and 'classifiers' in l['downloads']:
+        if 'rules' in l and not prules(l['rules']):print(l['rules']);continue
+        if 'natives' in l:
             nt=l['natives'][osn].replace('${arch}',arch)
             path=pj(d,'libraries',l['downloads']['classifiers'][nt]['path'])
             extzfa(path,ntd)
-            if not 'actrifact' in l['downloads']:continue
-        p,n,v,file=fmname(l['name'])
-        if n in ns and 'native' not in file:
+            print(l)
+        p,n1,v,file=fmname(l['name'])
+        if 'natives' in file:n=n1+'-natives-'+'-'.join(file.split('natives')[1:])
+        else:n=n1
+        if n in ns and not 'natives' in file:
             ind=ns.index(n);v1=vs[ind]
             if v>v1:
                 print('replace','v=',v,'v1=',v1,'target=',cps[ind])
                 del cps[ind],vs[ind],ns[ind]
-            else:print('skip',p,n,v,file,'repeat=',ns[ind]);continue
+            else:print('skip',p,n,f'({n1})',v,file,'repeat=',cps[ind]);continue
         ns.append(n);vs.append(v)
-        cps.append(pj(d,'libraries',p,n,v,file,abspath=abscp))
+        cps.append(pj(d,'libraries',p,n1,v,file,abspath=abscp))
     return (cps,ns,vs)
 def getarg(ver,prf,d=d,args=['java','-Xmx2g','-Xms2g'],abspath=False):
     #java {jvm参数} -cp {classpath} {mainClass(主类名)} {游戏参数}
     v=readv(ver,d)
-    vid,j,args=v['id'],v.get('javaVersion',{}),args+['-XX:+UseG1GC','-XX:-UseAdaptiveSizePolicy','-XX:-OmitStackTraceInFastThrow','-Djdk.lang.Process.allowAmbiguousCommands=true','-Dlog4j2.formatMsgNoLookups=true']
+    vid,j,args=v['id'],v.get('javaVersion',{}),args+['-XX:+UseG1GC','-XX:-UseAdaptiveSizePolicy','-XX:-OmitStackTraceInFastThrow',
+        '-XX:+AlwaysPreTouch','-XX:+UseStringDeduplication',
+        '-Djdk.lang.Process.allowAmbiguousCommands=true','-Dlog4j2.formatMsgNoLookups=true']
     if 'inheritsFrom' in v:
         v1=readv(v['inheritsFrom'],d)
         vid,j,jvm,cp,game=v1['id'],v1['javaVersion'],getargjvm(v1,d,ver,abspath),getcp(v1,d,ver,abspath,[],[],[]),(getarggame(v1,d,prf,ver,abspath) if not 'minecraftArguments' in v else [])
-    else:jvm,cp,game=[],[[],[],[]],[]
+    else:jvm,cp,game=[],([],[],[]),[]
     jvm+=getargjvm(v,d,ver,abspath);cp=getcp(v,d,ver,abspath,*cp);game+=getarggame(v,d,prf,ver,abspath)
     if '${classpath}' not in jvm:jvm+=['-cp','${classpath}']
     if '-p' not in jvm:cp[0].append(pj(d,'versions',vid,vid+'.jar',abspath=abspath))

@@ -57,7 +57,7 @@ def dlurl(u,p,chunk_size=1048576,openf=open):
                     #total=t1
             return
         except Exception as ex:print(ex)
-def pj(*p,cn='/',abspath=False):#连接路径 pj('a','b','c')返回'a/b/c' pj('c:\\a\\b','c')返回'c:/a/b/c' cn表示默认用'/'连接
+def pj(*p,cn='/',abspath=False):#连接路径 pj('a','b','c')返回'a/b/c' pj('c:\\a\\b','c')返回'c:/a/b/c' cn='/'表示默认用'/'连接
     res=''
     for i in p:
         if not i:continue
@@ -99,14 +99,19 @@ def getcs():
     else:return ':'
 def prules(rules):
     for rule in rules:
-        if not 'os' in rule:continue
-        if rule['action']=='allow':rt=True
-        else:rt=False
-        osrule=rule['os']
-        if 'name' in osrule and osrule['name']==getosname():return rt
-        if 'arch' in osrule and osrule['arch']=='x86' and platform.architecture()[0]=='32bit':return rt
-        if 'version' in osrule and re.match(osrule['version'],getosversion()):return rt
-        return not rt
+        if 'os' not in rule:continue
+        osrule,ac=rule['os'],rule['action']=='allow'
+        if 'name' in osrule and osrule['name']!=getosname():
+            if ac:return False
+            else:continue
+        if 'arch' in osrule and osrule['arch']=='x86' and platform.architecture()[0]!='32bit':
+            if ac:return False
+            else:continue
+        if 'version' in osrule and not re.match(osrule['version'],getosversion()):
+            if ac:return False
+            else:continue
+        if not ac:return False
+    return True
 def findver(txt,sep='',mode=int):
     return mode(sep.join(re.findall('\\d+',txt)))
 def extzfa(fl,p,f=True):
