@@ -50,8 +50,8 @@ class tempvar:
         del self.value
 class ui:
     def __init__(self):
-        self.ver='v3.4'
-        self.text='公告:作者开了个mc服务器,地址为folia.cc.cd:22222,无需正版账号,游戏版本为26.1.2'
+        self.ver='v3.5'
+        self.text=''#公告
         self.srs,self.step=[],0
         self.reg={'fabric':self.instfab,'forge':self.instfg,'quilt':self.instquilt,'neoforge':self.instneo,'optifine':self.instopti}
         self.createW()
@@ -212,7 +212,7 @@ class ui:
         sg1.grid(row=2,columnspan=5)#self.jvls:listbox java列表
         bt(self.sl,text='下载java',command=self.dljava).grid(row=2,column=5)
         #关于界面
-        lb(self.ab,text=f'###########{self.text}###########').grid(sticky='w')
+        if self.text:lb(self.ab,text=f'###########{self.text}###########').grid(sticky='w')
         lb(self.ab,text='作者:_MhwsChina_').grid(sticky='w')
         lb(self.ab,text='项目:https://github.com/MhwsChina/MhCraft').grid(sticky='w')
         lb(self.ab,text=f'版本:{self.ver}').grid(sticky='w')
@@ -231,28 +231,31 @@ class ui:
         t=time.strftime('%Y-%m-%d',time.localtime())
         if getjs(('t',0))==t and not show:print('今天已经检查过更新了');return
         setjs(('t',t))
-        try:url,size,fn=getupdate(self.ver,_zip='.py' in sys.argv[0])
+        try:url,size,fn=getupdate(self.ver,_zip=0)#'.py' in sys.argv[0])
         except Exception as ex:mess.showerror('错误','检查更新时遇到了以下错误:'+str(ex))
         if not url:
             if show:mess.showwarning('警告','已是最新版本了!')
             else:print('已是最新版本了!')
             return False
-        if not '.py' in sys.argv[0]:
+        if not '.py' in sys.argv[0] or 1:
             #shutil.move(sys.argv[0],'mhc/RemoveMe')
-            mess.showinfo('将自动下载','发现可用更新')
-            try:self.dlfile(url,'mhc/upd',chunk_size=1024,timeout=10,rs=1)
-            except Exception as ex:mess.showerror('下载失败','不好!下载发生了错误!({ex})\n请重试或前往https://wwbxb.lanzouw.com/b00yb7zrij手动下载,提取密码为2026');return 0
+            if not mess.askyesno('发现可用更新','是否下载?'):return
+            ex,ur=False,['https://github.dpik.top/','https://gh-proxy.com/','']
+            for i in ur:
+                try:self.dlfile(i+url,'mhc/upd',chunk_size=1024,timeout=10,rs=1,tishi=0);break
+                except Exception as ex1:ex=ex1
+            if ex:mess.showerror('下载失败',f'不好!下载发生了错误!({ex})\n请重试或前往https://wwbxb.lanzouw.com/b00yb7zrij手动下载,提取密码为2026');return 0
             os.rename(sys.argv[0],'mhc/RemoveMe')
             if 'zip'in fn:extzfa('mhc/upd','./')
             else:os.rename('mhc/upd',sys.argv[0])
             mess.showinfo('提示','更新完成,请重启程序!');os._exit(0)
-        else:mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');self.dlfile(url,'最新版源代码压缩包.zip',chunk_size=1024)
+        else:mess.showinfo('MhDown','检测到以源码形式运行,将为你下载最新版本的压缩包!');self.dlfile(url,'最新版源代码.zip',chunk_size=1024)
         return 1
     def dljava(self):
         rp=self.getrp()
         url='https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json'
         if rp:url=url.replace('launchermeta.mojang.com',rp)
-        osn1=fmosn(self.choose_list('windows','linux','mac-os',text='请选择系统',default=getosname().replace('osx','mac-os')))#;print(osn1);return
+        osn1=fmosn(self.choose_list('windows','linux','mac-os',text='请选择系统',default=getosname()))#;print(osn1);return
         d=urljson(url,timeout=5)[osn1];name=self.choose_list(*(i for i in d),text='请选择版本')
         url1=d[name][0]['manifest']['url']
         if rp:url1=url1.replace('piston-meta.mojang.com',rp)
@@ -759,7 +762,7 @@ class ui:
                 if rs1:err.set(ex);a.destroy();return
         a.destroy()
         if tishi:
-            mess.showinfo('提示',tishi.format(p=p,u=u)+'下载完成!')
+            mess.showinfo('提示',tishi.format(p=p)+' 下载完成!')
 mui=ui()
 th.Thread(target=mui.load,name='loading').start()
 w.mainloop()

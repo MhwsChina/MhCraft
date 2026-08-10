@@ -68,7 +68,7 @@ def getcp(v,d,ver=None,abscp=0,cps=[],ns=[],vs=[]):
     if not ver:ver=v['id']
     osn,ntd,arch=getosname(),pj(d,f'versions/{ver}/{ver}-natives'),str(findver(platform.architecture()[0]))
     for l in v['libraries']:
-        if 'rules' in l and not prules(l['rules']):print(l['rules']);continue
+        if 'rules' in l and not prules(l['rules']):continue
         if 'natives' in l:
             nt=l['natives'][osn].replace('${arch}',arch)
             path=pj(d,'libraries',l['downloads']['classifiers'][nt]['path'])
